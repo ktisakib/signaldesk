@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Real LAN relay integration test; never uploads media files to the relay."""
 import datetime
+import hashlib
 import json
 import os
 import shutil
@@ -82,15 +83,22 @@ try:
         wait(online)
         for c in channels:decode('/streams/'+c['id']+'/index.m3u8')
         print('PASS: two local engines, scheduled queue, encrypted SRT and independent HLS playback')
-        def reject_publish(channel, user, password):
-            target=f"srt://mediamtx:8890?mode=caller&streamid=publish:streams/{channel['id']}:{user}:{password}&passphrase={channel['publishingKey']}&pbkeylen=32&pkt_size=1316&connect_timeout=3000"
+        def reject_publish(channel, user, password, transport=None):
+            proof=hashlib.sha256(('signaldesk-srt-auth-v1:'+password).encode()).hexdigest()
+            encryption=channel['publishingKey'] if transport is None else transport
+            target=f"srt://mediamtx:8890?mode=caller&streamid=publish:streams/{channel['id']}:{user}:{proof}&passphrase={encryption}&pbkeylen=32&pkt_size=1316&connect_timeout=3000"
             r=subprocess.run(['docker','exec',containers[0],'ffmpeg','-v','error','-re','-i','/media/local-show.mp4','-t','2','-c','copy','-f','mpegts',target],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
             assert r.returncode!=0,'Unauthorized or duplicate publisher accepted'
         reject_publish(channels[0],channels[0]['id'],channels[0]['publishingKey'])
+        api(channels[1]['base'],'/api/relay/stop','POST',{})
+        wait(lambda:not next(x for x in api(BASE,'/api/channels')['channels'] if x['id']==channels[1]['id'])['online'])
         reject_publish(channels[1],channels[0]['id'],channels[0]['publishingKey'])
         reject_publish(channels[1],channels[1]['id'],'wrong-key-0123456789')
-        assert online()
-        print('PASS: duplicate publisher, cross-channel credentials and incorrect keys rejected')
+        reject_publish(channels[1],channels[1]['id'],channels[1]['publishingKey'],'incorrect-encryption-secret')
+        reject_publish(channels[1],channels[1]['id'],channels[1]['publishingKey'],'')
+        api(channels[1]['base'],'/api/relay/start','POST',{})
+        wait(online)
+        print('PASS: duplicate publisher, cross-channel credentials, wrong proofs, wrong passphrases and unencrypted publishing rejected')
 
         # Revocation must stop the active publisher and reject its reconnects.
         c=channels[1];new=api(BASE,f"/api/channels/{c['id']}/rotate",'POST',{},admin=True)

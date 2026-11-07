@@ -36,6 +36,7 @@ mod camera;
 mod graphics;
 mod relay;
 mod schedule;
+mod srt_auth;
 mod youtube;
 
 const ADDRESS: &str = "127.0.0.1:9780";

@@ -342,7 +342,7 @@ fn relay_args(port: u16, config: &SavedConfig) -> Vec<String> {
         .into_iter()
         .map(String::from),
     );
-    args.push(format!("srt://{}:{}?mode=caller&streamid=publish:streams/{}:{}:{}&passphrase={}&pbkeylen=32&pkt_size=1316&connect_timeout=5000", config.host, config.port, config.channel_name, config.channel_name, config.stream_key, config.stream_key));
+    args.push(format!("srt://{}:{}?mode=caller&streamid=publish:streams/{}:{}:{}&passphrase={}&pbkeylen=32&pkt_size=1316&connect_timeout=5000", config.host, config.port, config.channel_name, config.channel_name, crate::srt_auth::proof(&config.stream_key), config.stream_key));
     args
 }
 
@@ -475,6 +475,14 @@ mod tests {
         let public = serde_json::to_string(&PublicConfig::from(Some(&c))).unwrap();
         assert!(!public.contains(&c.stream_key));
         let args = relay_args(8554, &c);
+        let target = args.last().unwrap();
+        assert!(!target
+            .split("&passphrase=")
+            .next()
+            .unwrap()
+            .contains(&c.stream_key));
+        assert!(target.contains(&format!("&passphrase={}", c.stream_key)));
+        assert!(target.contains(&crate::srt_auth::proof(&c.stream_key)));
         assert!(!args.last().unwrap().contains("rw_timeout="));
         assert!(args
             .last()

@@ -11,6 +11,8 @@ use sqlx::{sqlite::SqliteConnectOptions, Row, SqlitePool};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 use tower_http::services::{ServeDir, ServeFile};
+#[path = "../srt_auth.rs"]
+mod srt_auth;
 
 type Reply = Result<Json<Value>, (StatusCode, &'static str)>;
 struct App {
@@ -218,7 +220,10 @@ async fn auth(
     if body.action == "publish"
         && body.protocol == "srt"
         && body.user == id
-        && equal(&body.password, &row.get::<String, _>("secret"))
+        && equal(
+            &body.password,
+            &srt_auth::proof(&row.get::<String, _>("secret")),
+        )
     {
         StatusCode::NO_CONTENT
     } else {

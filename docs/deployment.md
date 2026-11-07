@@ -2,6 +2,8 @@
 
 The relay receives one encrypted SRT program per laptop and distributes HLS. Source videos, media library, schedule, graphics and encoding stay on each laptop. The relay stores channel credentials and a short rolling HLS buffer in memory, with recording disabled. Every viewer consumes relay upload bandwidth.
 
+Use **v0.1.1 or newer** on both relay and laptops. Older broadcasters are rejected by the corrected authentication protocol. The SRT handshake carries a domain-separated SHA-256 proof; the private publishing key is used separately as the transport encryption passphrase. Keep the high-entropy generated keys.
+
 ## Release artifacts
 
 - Source: <https://github.com/ktisakib/signaldesk>
@@ -44,7 +46,7 @@ Open <http://192.168.0.248:18088/relay/>. Obtain `RELAY_ADMIN_TOKEN` from the se
 
 ## Windows laptop
 
-1. Download the installer and `SHA256SUMS.txt` from the release. Verify with `Get-FileHash .\SignalDesk_0.1.0_x64-setup.exe -Algorithm SHA256` (use the actual release filename).
+1. Download the installer and `SHA256SUMS.txt` from the release. Verify with `Get-FileHash .\SignalDesk_0.1.1_x64-setup.exe -Algorithm SHA256` (use the actual release filename).
 2. Install on Windows 10 2004+ or Windows 11 x64. The unsigned build may trigger SmartScreen. WebView2 is bootstrapped if missing. No developer tools or Docker are needed.
 3. Open SignalDesk → **Relay connection** → **Import a connection profile**, and select the administrator's `.connection.json`. Alternatively enter host `192.168.0.248`, port `8890`, channel ID, publishing key and web address `http://192.168.0.248:18088`.
 4. Click **Test relay connection**. This verifies the web address and channel registration; actual publishing verifies the UDP port and key.

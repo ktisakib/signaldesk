@@ -1,3 +1,5 @@
+Use v0.1.1 or newer on both relay and broadcasters. This release replaces v0.1.0 and keeps the SRT encryption key out of handshake stream-ID metadata.
+
 SignalDesk Windows x64 broadcaster and LAN relay deployment.
 
 - Install the Windows `.exe`; FFmpeg, FFprobe and MediaMTX are downloaded from pinned upstream releases and checksum-verified automatically. Installation needs internet for these tools and, if missing, WebView2.

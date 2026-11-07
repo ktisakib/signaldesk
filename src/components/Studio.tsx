@@ -1,3 +1,4 @@
+import { version } from "../../package.json";
 import {
   useEffect,
   useRef,
@@ -788,7 +789,7 @@ export default function Studio() {
               {connected
                 ? "All controls stay on this computer"
                 : "Waiting for local engine"}
-              <span className="footer-separator">·</span>v0.1.0
+              <span className="footer-separator">·</span>v{version}
             </span>
           </footer>
         </main>
