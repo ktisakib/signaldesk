@@ -85,8 +85,9 @@ jobs:
             if [ "$role" = relay ]; then source_image=signaldesk-relay:local; else source_image=signaldesk:local; fi
             docker tag "$source_image" "$registry-$role:sha-$COMMIT"
             docker tag "$source_image" "$registry-$role:stable"
-            docker push "$registry-$role:sha-$COMMIT"
-            docker push "$registry-$role:stable"
+            # Publish the tested amd64 manifest directly; GHCR can reject local provenance indexes.
+            docker push --platform linux/amd64 "$registry-$role:sha-$COMMIT"
+            docker push --platform linux/amd64 "$registry-$role:stable"
           done
       - name: Remove relay CI containers and credentials
         if: always()
