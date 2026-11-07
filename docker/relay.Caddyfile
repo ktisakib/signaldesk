@@ -1,0 +1,13 @@
+:8088 {
+    header {
+        X-Content-Type-Options nosniff
+        Referrer-Policy no-referrer
+        Cache-Control no-store
+    }
+    handle /streams/* {
+        reverse_proxy mediamtx:8888
+    }
+    handle {
+        reverse_proxy relay:9790
+    }
+}

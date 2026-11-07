@@ -1,0 +1,35 @@
+name: signaldesk
+
+services:
+  studio:
+    image: signaldesk:local
+    build: .
+    init: true
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:9780"
+      - "8888:8888"
+    environment:
+      BROADCAST_WEB_ROOT: /app/web
+      BROADCAST_HOME: /data
+      BROADCAST_BIND: 0.0.0.0:9780
+    volumes:
+      - studio-data:/data
+      - ./media:/media:ro
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  studio-data:
+

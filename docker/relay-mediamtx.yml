@@ -1,0 +1,34 @@
+logLevel: warn
+readTimeout: 10s
+writeTimeout: 10s
+writeQueueSize: 512
+authMethod: http
+# The address is supplied through MTX_AUTHHTTPADDRESS by Compose.
+authHTTPExclude:
+  - action: api
+api: true
+apiAddress: :9997
+rtsp: false
+rtmp: false
+webrtc: false
+moq: false
+srt: true
+srtAddress: :8890
+hls: true
+hlsAddress: :8888
+hlsAllowOrigins: ['*']
+hlsVariant: mpegts
+hlsAlwaysRemux: true
+hlsSegmentCount: 7
+hlsSegmentDuration: 2s
+hlsSegmentMaxSize: 8M
+hlsDirectory: ''
+metrics: false
+pprof: false
+playback: false
+pathDefaults:
+  source: publisher
+  overridePublisher: false
+  maxReaders: 100
+  record: false
+paths: {}

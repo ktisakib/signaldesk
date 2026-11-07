@@ -1,0 +1,12 @@
+[Unit]
+Description=Pull and deploy the verified SignalDesk relay image
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/signaldesk
+ExecStart=/opt/signaldesk/scripts/deploy-relay.sh
+TimeoutStartSec=600
+UMask=0077

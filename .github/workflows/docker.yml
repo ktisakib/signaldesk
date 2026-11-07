@@ -1,0 +1,99 @@
+name: Docker checks and streaming smoke
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      COMPOSE_PROJECT_NAME: signaldesk-ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@1.97.1
+        with:
+          components: rustfmt, clippy
+      - name: Check frontend
+        run: |
+          npm ci
+          npm run lint
+          npm test
+          npm run build
+      - name: Check playlist and smoke-test helpers
+        run: |
+          python -m unittest discover -s tests -p '*_test.py'
+          python -m unittest discover -s docker -p 'test_*.py'
+      - name: Validate optional tunnel configuration
+        env:
+          CLOUDFLARE_TUNNEL_TOKEN: ci-placeholder-not-a-real-token
+        run: docker compose -f compose.yaml -f compose.cloudflare.yaml config --quiet
+      - name: Build and start isolated studio
+        run: |
+          docker compose build
+          docker compose up --wait --wait-timeout 120
+      - name: Verify real HLS playout and test-media cleanup
+        timeout-minutes: 5
+        run: python docker/smoke.py
+      - name: Install local media test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          mkdir -p "$RUNNER_TEMP/signaldesk-bin"
+          docker compose cp studio:/usr/local/bin/mediamtx "$RUNNER_TEMP/signaldesk-bin/mediamtx"
+          chmod +x "$RUNNER_TEMP/signaldesk-bin/mediamtx"
+          echo "$RUNNER_TEMP/signaldesk-bin" >> "$GITHUB_PATH"
+      - name: Check Rust and real camera and relay pipelines
+        timeout-minutes: 15
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy -p broadcast-service --all-targets -- -D warnings
+          cargo test -p broadcast-service
+          cargo test -p broadcast-service -- --ignored --nocapture --test-threads=1
+      - name: Build and verify the multi-broadcaster LAN relay
+        timeout-minutes: 10
+        env:
+          COMPOSE_PROJECT_NAME: signaldesk-relay-ci
+        run: |
+          python scripts/setup-relay.py
+          docker compose --env-file .env.relay -f compose.relay.yaml up --build -d --wait --wait-timeout 120
+          python scripts/smoke-relay.py
+      - name: Publish verified relay and studio to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+          registry="ghcr.io/${REPOSITORY,,}"
+          for role in relay studio; do
+            if [ "$role" = relay ]; then source_image=signaldesk-relay:local; else source_image=signaldesk:local; fi
+            docker tag "$source_image" "$registry-$role:sha-$COMMIT"
+            docker tag "$source_image" "$registry-$role:stable"
+            docker push "$registry-$role:sha-$COMMIT"
+            docker push "$registry-$role:stable"
+          done
+      - name: Remove relay CI containers and credentials
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: signaldesk-relay-ci
+        run: |
+          if [ -f .env.relay ]; then docker compose --env-file .env.relay -f compose.relay.yaml down --volumes; fi
+      - name: Remove CI containers and test data
+        if: always()
+        run: docker compose down --volumes

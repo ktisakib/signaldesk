@@ -1,0 +1,955 @@
+{
+  "version": 1,
+  "reviewedOn": "2026-11-01",
+  "selection": "NASA complete programs with item-specific download and redistribution permission; full content retained.",
+  "videos": [
+    {
+      "id": "nasa-svs-14538",
+      "title": "Antarctic Sea Ice Minimum 2024",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14538/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=oqOiu-uQ8Ew",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014500/a014538/A-A_Sea_Ice_Feb_2024_FINAL_Vertical.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14538/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Grace Weikert. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "KBR Wyle Services, LLC"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Trent L. Schindler",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/01-14538-antarctic-sea-ice-minimum-2024.mp4",
+      "musicCredit": "\"Aron Wright [ PRS ] and Florian Moenks [ GEMA ]\" from Universal Production Music",
+      "youtubeTitle": "Antarctic Sea Ice Hits Annual Minimum, Second Lowest On Record",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 65,
+      "durationSeconds": 64.783673,
+      "width": 1280,
+      "height": 720,
+      "sha256": "e307ed0e0855b41bc2be568722696566d0db0d155e3bbfa4f37190af43f9901f",
+      "sizeBytes": 11012777,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14567",
+      "title": "Our Oceans from Space",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14567/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=v3dO7PhYas4",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014500/a014567/Earth_Day_FINAL_CUT_041124.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14567/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Grace Weikert. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "KBR Wyle Services, LLC"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/02-14567-our-oceans-from-space.mp4",
+      "musicCredit": "Across the Golden Sky by Dan Thiessen [ BMI ]",
+      "youtubeTitle": "Our Oceans from Space",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 126,
+      "durationSeconds": 126.479093,
+      "width": 1280,
+      "height": 720,
+      "sha256": "3b2e9e1eb65e4d275961f895f476ca0aa3793cdbca9e12c8c38a7687a5b2ae64",
+      "sizeBytes": 33727255,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-13889",
+      "title": "Landsat 9 at Work",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/13889/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=Af8gJ0RVyaY",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a013800/a013889/13889_Landsat9_at_Work-hd-yt.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/13889/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Matthew Radcliff. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Matthew Radcliff",
+            "employer": "KBR Wyle Services, LLC"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/03-13889-landsat-9-at-work.mp4",
+      "musicCredit": "The Waiting Room by Sam Dodson [PRS], Afterglow by Christopher Timothy White [PRS], both published by Atmosphere Music Ltd [PRS]; and Inner Strength by Brava/Dsilence/Input/Output [SGAE], published by El Murmullo Sarao [SGAE] and Universal Sarao [SGAE]. Available from Universal Production Music.",
+      "youtubeTitle": "Landsat 9 At Work",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 196,
+      "durationSeconds": 196.324717,
+      "width": 1280,
+      "height": 720,
+      "sha256": "f0a3ed592a4b4119b710b83a905c52db3be4c7e659634a8a9b0bec418f3a1773",
+      "sizeBytes": 45386836,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-13890",
+      "title": "A Trip Through Time with Landsat 9",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/13890/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=up9oDz49QXI",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a013800/a013890/13890_Landsat_Decades-720-tw.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/13890/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Matthew Radcliff. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Matthew Radcliff",
+            "employer": "KBR Wyle Services, LLC"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/04-13890-a-trip-through-time-with-landsat-9.mp4",
+      "musicCredit": "Silent Soul — Stanislaw Syrewicz; Raspberry Sunshine — Mickey Bruce and Treana Morris; Welcome In The Team — Paul Tyan; Shall We Play A Game? — Sebastian Barnaby Robertson and Tristan Calder; Lisa and Bart — Laurent Tierry-Mieg and Thierry Durbet; Stars — Claude Pelouse; Royale Time — Jacob Paul Turner and Sebastian Barnaby Robertson. Tracks from Universal Production Music; publisher credits remain at the source page and in the complete program.",
+      "youtubeTitle": "A Trip Through Time With Landsat 9",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 286,
+      "durationSeconds": 286.348481,
+      "width": 1280,
+      "height": 720,
+      "sha256": "9734ad3251e05b25f91995185aef916cfd2cffaf2c4b2549005920104c36e1f8",
+      "sizeBytes": 61397673,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-13821",
+      "title": "Juno Discovers Mars’ Dust Storms Fill Solar System",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/13821/",
+      "youtubeUrl": "https://youtu.be/ve0jLXEzFXE",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a013800/a013821/13821_Juno_Dust_MASTER.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/13821/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Dan Gallagher. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Dan Gallagher",
+            "employer": "USRA"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Michael Lentz",
+            "employer": "USRA"
+          },
+          {
+            "name": "Kel Elkins",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/05-13821-juno-discovers-mars-dust-storms-fill-solar-system.mp4",
+      "musicCredit": "Original musical score by Vangelis, used with permission.",
+      "youtubeTitle": "Juno Discovers Mars’ Dust Storms Fill Solar System (🎵 by Vangelis)",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 105,
+      "durationSeconds": 104.675556,
+      "width": 1280,
+      "height": 720,
+      "sha256": "74f82ac98bf8f279546b8c8f0216f7ba4a4280929d40388b900789c9e807427d",
+      "sizeBytes": 27074234,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14990",
+      "title": "SWOT Mission Unlocks a New View of Our Waterways",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14990/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=42PUJiJC65Q",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014900/a014990/20260305_SVS14990_SWOT_RIVERS_DATA_VIS_3840x2160_60fps_ENGLISH_FINALCUT_GAW.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14990/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Grace Weikert. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Greg Shirah",
+            "employer": "NASA/GSFC"
+          }
+        ],
+        "Written by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Narration": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Audio": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Support": [
+          {
+            "name": "Andrew Wang",
+            "employer": "NASA/JPL"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/06-14990-swot-mission-unlocks-a-new-view-of-our-waterways.mp4",
+      "musicCredit": "Wander Instrumental by the Music Yard Sunny Morning Instrumental by Vigne Wintrebert Magical Mushrooms Instrumental by Doddy Board Game Instrumental by de Chaumont Dubois",
+      "youtubeTitle": "SWOT Mission Unlocks a New View of Our Waterways",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 277,
+      "durationSeconds": 277.130159,
+      "width": 1280,
+      "height": 720,
+      "sha256": "481e5a494bcf5438cd672944ffa3d5b6ac0b49dd4ec2e31472d6c892ab09b8da",
+      "sizeBytes": 65206533,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14894",
+      "title": "NASA Flew Over a Fire — to Better Understand Future Ones",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14894/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=QFfZe9Zq2mY",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014800/a014894/20250919_SVS14894_FireSense_at_Fort_Stewart_Rx_Burn_4096x2160_29.97fps_ENGLISH_GAW_FINAL_CUT_V2.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14894/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Grace Weikert. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Edited by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Videography": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Audio": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          },
+          {
+            "name": "Jacob Pinter",
+            "employer": "eMITS"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Kel Elkins",
+            "employer": "USRA"
+          },
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Scientific consulting by": [
+          {
+            "name": "Jacquelyn Shuman",
+            "employer": "NASA Ames"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/07-14894-nasa-flew-over-a-fire-to-better-understand-future-ones.mp4",
+      "musicCredit": "Collective Conscious Instrumental by Moenks Wright Science to Save Us Instrumental by Moenks Wright Making Magic Instrumental by Moenks Wright Oxygenate the Idea Instrumental by Banksman Stone Turner Trusting in Tech Instrumental by Moenks Wright Kinetic World Instrumental by Price",
+      "youtubeTitle": "NASA Flew Over a Fire — to Better Understand Future Ones",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 750,
+      "durationSeconds": 749.702676,
+      "width": 1280,
+      "height": 676,
+      "sha256": "1bf6c3e5d11388d01a699f8163ca3cf73e2ca08871e21d1997dd973b71d40094",
+      "sizeBytes": 109309640,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14696",
+      "title": "NASA + Smithsonian and Greenhouse Gases",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14696/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=gz1JwUTL6dc",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014600/a014696/Smithsonian_GHG_v5_h.264.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14696/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; James Round. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "James Round",
+            "employer": "NASA/JPL CalTech"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Helen-Nicole Kostis",
+            "employer": "USRA"
+          }
+        ],
+        "Scientific consulting by": [
+          {
+            "name": "Stuart Davies",
+            "employer": "Smithsonian Forest Global Earth Observatory"
+          },
+          {
+            "name": "Helene Muller-Landau",
+            "employer": "Smithsonian Tropical Research Institute"
+          },
+          {
+            "name": "Lesley Ott",
+            "employer": "NASA/GSFC"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/08-14696-nasa-smithsonian-and-greenhouse-gases.mp4",
+      "musicCredit": "\"Human Endeavor\" by Oliver Grim, Koka Media; \"Accuracy\" by Laurent Levesque. Universal Production Music: \"Feelings of Pride\" by Kathryn Louise Maclennan, Label-Aurora Production Music.",
+      "youtubeTitle": "NASA + Smithsonian and Greenhouse Gases",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 257,
+      "durationSeconds": 257.277098,
+      "width": 1920,
+      "height": 540,
+      "sha256": "3c338fcf347dbb96a40342e3f93853d7d8574cd83efb1fddb742611a6e7df184",
+      "sizeBytes": 63821203,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14606",
+      "title": "NASA and Fire",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14606/",
+      "youtubeUrl": "https://youtu.be/RFz3T5059Jw",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014600/a014606/EIC_NASAandFire_Panel_Left_small.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14606/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Grace Weikert. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Written by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Edited by": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Videography": [
+          {
+            "name": "Grace Weikert",
+            "employer": "eMITS"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Helen-Nicole Kostis",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/09-14606-nasa-and-fire.mp4",
+      "musicCredit": "\"Magical Moments by Liam Joseph Hennessy [ PRS ]\" and “Strategy Meeting by Brice Davoli [ SACEM ]” from Universal Production Music",
+      "youtubeTitle": "NASA and Fire",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 193,
+      "durationSeconds": 193.329342,
+      "width": 1920,
+      "height": 540,
+      "sha256": "db7b28c8174ca527d792e1fba6c0ac912725c936de1ea29310515601a677cf93",
+      "sizeBytes": 31842539,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14507",
+      "title": "NASA Joins the Jane Goodall Institute to Conserve Chimpanzee Habitat, Earth Information Center Videos",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14507/",
+      "youtubeUrl": "https://youtu.be/XLWZUZh-Kgc",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014500/a014507/EIC_NASAandJGI_Panel_Left_small.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14507/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Jefferson Beck. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Jefferson Beck",
+            "employer": "eMITS"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Helen-Nicole Kostis",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/10-14507-nasa-joins-the-jane-goodall-institute-to-conserve-chimpanzee-habitat-e.mp4",
+      "youtubeTitle": "NASA and Biodiversity",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 170,
+      "durationSeconds": 169.598549,
+      "width": 1280,
+      "height": 720,
+      "sha256": "ff3b43ff64b285057356ba3b63a7b2b3dfee314b92ea004a36a2cf2cae5431b8",
+      "sizeBytes": 24734623,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "No separate music credit is listed on the source page; retain the complete program soundtrack."
+    },
+    {
+      "id": "nasa-svs-13216",
+      "title": "NASA Has Eyes On The Atlantic Hurricane Season",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/13216/",
+      "youtubeUrl": "https://youtu.be/6X0puPAMe74",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a013200/a013216/YOUTUBE_1080_13216_NASA_Has_Eyes_On_The_Atlantic_Hurricane_Season_V2_youtube_1080.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/13216/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Joy Ng. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Joy Ng",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/11-13216-nasa-has-eyes-on-the-atlantic-hurricane-season.mp4",
+      "musicCredit": "“Northern Breeze” by Denis Levaillant [SACEM], “Stunning Horizon” by Maxime Lebidois [SACEM], Ronan Maillard [SACEM], “Magnetic Force” by JC Lemay [SACEM] from Killer Tracks",
+      "youtubeTitle": "NASA Has Eyes On The Atlantic Hurricane Season",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 157,
+      "durationSeconds": 157.268753,
+      "width": 1280,
+      "height": 720,
+      "sha256": "6bbbc42e409a0d79ee8e2348934db7065f7959da8f075f0de722f8519428597b",
+      "sizeBytes": 38491996,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14713",
+      "title": "Building Coastal Resilience with NASA Data",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14713/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=FDSoZYUw6Bk",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014700/a014713/EIC_NASAandSeaLevelChange_Panel_Left.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14713/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; James Round. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "James Round",
+            "employer": "NASA/JPL CalTech"
+          }
+        ],
+        "Scientific consulting by": [
+          {
+            "name": "Benjamin Hamlington",
+            "employer": "NASA/JPL"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Helen-Nicole Kostis",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/12-14713-building-coastal-resilience-with-nasa-data.mp4",
+      "youtubeTitle": "NASA and Sea Level Change",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 139,
+      "durationSeconds": 139.157188,
+      "width": 1920,
+      "height": 540,
+      "sha256": "9373118faeaa99ad95dcf0381a7175b66fee835118093ddae0a36994a43f3d2c",
+      "sizeBytes": 27182973,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "\"Waited So Long\" and \"Untangled\" by Thomas Trueman, Abby Roads Masters; \"Of the Sea\", by Jack Niemann, BBC Production Music"
+    },
+    {
+      "id": "nasa-svs-14741",
+      "title": "Parker Solar Probe: Humanity’s Closest Encounter with the Sun",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14741/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=c80TzqNoqMg",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014700/a014741/14741_PSP_Perihelion_YT.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://science.nasa.gov/science-research/heliophysics/nasas-parker-solar-probe-makes-history-with-closest-pass-to-sun/",
+      "permissionQuote": "This video can be freely shared and downloaded.",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Joy Ng. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Joy Ng",
+            "employer": "eMITS"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/13-14741-parker-solar-probe-humanity-s-closest-encounter-with-the-sun.mp4",
+      "youtubeTitle": "Parker Solar Probe: Humanity’s Closest Encounter with the Sun",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 342,
+      "durationSeconds": 341.704853,
+      "width": 1280,
+      "height": 720,
+      "sha256": "52db948c71cbb1fa7aa3ec31102b7648d3d238b39f3b14dcceb64e108b896561",
+      "sizeBytes": 23226528,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "“Altitude” by Thomas Daniel Bellingham; “Our Velocity Vibrant” by Jeremy Noel William Abbott; “Omega Centauri” by Timothy James Cornick; “Earthrise” by Alasdair Neil Parkinson; “The Big Revelation” by Richard James Neale and Jason Glover; “Snuggling You” by Daniel Backes and Peter Moslener. Universal Production Music."
+    },
+    {
+      "id": "nasa-svs-14773",
+      "title": "NASA's PUNCH Mission",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14773/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=bOi8fDGtmZo",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014700/a014773/PUNCH_MissionOverview_YT.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://science.nasa.gov/science-research/heliophysics/nasas-punch-mission-to-revolutionize-view-of-solar-wind/",
+      "permissionQuote": "This video can be freely shared and downloaded.",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {},
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/14-14773-nasa-s-punch-mission.mp4",
+      "musicCredit": "“Crafted with Science Instrumental” by Zak McNeil, via Universal Production Music.",
+      "youtubeTitle": "NASA’S PUNCH Mission",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 142,
+      "durationSeconds": 142.059683,
+      "width": 1280,
+      "height": 720,
+      "sha256": "d0599d0ad9ad9e7b04e115c951d3b0fd44488c705d303c413e5f7d457741bde9",
+      "sizeBytes": 26223864,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-14517",
+      "title": "How NASA Uses Simple Technology to Track Lunar Missions",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14517/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=L2TMQpw76iQ",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014500/a014517/14517_CLPS_LRA.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://www.nasa.gov/technology/how-nasa-uses-simple-technology-to-track-lunar-missions/",
+      "permissionQuote": "This video can be freely shared and downloaded.",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; James Tralie. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "James Tralie",
+            "employer": "ADNET Systems, Inc."
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/15-14517-how-nasa-uses-simple-technology-to-track-lunar-missions.mp4",
+      "youtubeTitle": "How NASA Uses Simple Technology to Track Lunar Missions",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 92,
+      "durationSeconds": 91.97424,
+      "width": 1280,
+      "height": 720,
+      "sha256": "1bd7439e30b9e69ba38de2a43ade50882a4b8eddbd024bc556b7021a7430597a",
+      "sizeBytes": 14672442,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "“Bending Light” by Sergey Azbel, Universal Production Music."
+    },
+    {
+      "id": "nasa-svs-60001",
+      "title": "NASA Mapping Critical Minerals",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/60001/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=tikxjIqNpmU",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a060000/a060000/a060001/EIC_CriticalMinerals_Main_4K.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/60001/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; James Round. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "James Round",
+            "employer": "NASA/JPL CalTech"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/16-60001-nasa-mapping-critical-minerals.mp4",
+      "youtubeTitle": "NASA Mapping Critical Minerals",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 197,
+      "durationSeconds": 196.603356,
+      "width": 1920,
+      "height": 540,
+      "sha256": "cdf3d60955aceba034a4a877b4c284e56e84ac09305269e668ffb6f7d0e9e661",
+      "sizeBytes": 41300466,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "\"Quiet Glow\" by Leo Fumagalli and Lucillie Millie, Collection Ideale; \"Swift Response\", by Miguel D’Oliveira, BBC Production Music; “In Plain Sight” by Miguel D’Oliveira, BBC Production Music; “Symbiosis” by by Leo Fumagalli and Lucillie Millie, Collection Ideale from Universal Production Music."
+    },
+    {
+      "id": "nasa-svs-60002",
+      "title": "NASA: Helping Communities Protect Drinking Water",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/60002/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=1zLlbiBLFRY",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a060000/a060000/a060002/EIC_WaterResources_Main_4K.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/60002/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; James Round. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "James Round",
+            "employer": "NASA/JPL CalTech"
+          }
+        ],
+        "Scientific consulting by": [
+          {
+            "name": "Erin Urquhart",
+            "employer": "NASA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/17-60002-nasa-helping-communities-protect-drinking-water.mp4",
+      "youtubeTitle": "NASA: Helping Communities Protect Drinking Water",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 170,
+      "durationSeconds": 170.457687,
+      "width": 1920,
+      "height": 540,
+      "sha256": "06678b17dd8f6ba3f7a08ce385a07d8beb03a14e079de975daea44704999ddf6",
+      "sizeBytes": 39912765,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "\"Journey to Glory\" by Anthony Giordano, Publishers: Illustration Musicale, Universal Production Music France; \"Epic Quest Overture\" by Anthony Giordano, Publishers: Illustration Musicale, Universal Production Music France; \"Heroic Valor\" by Anthony Giordano, Publishers: Illustration Musicale, Universal Production Music France."
+    },
+    {
+      "id": "nasa-svs-60003",
+      "title": "How NASA Data Stabilizes Global Markets",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/60003/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=kq2YJ-BvN6E",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a060000/a060000/a060003/EIC_AgAndMarkets_Main_4K.mp4",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/60003/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {},
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/18-60003-how-nasa-data-stabilizes-global-markets.mp4",
+      "youtubeTitle": "How NASA Data Stabilizes Global Markets",
+      "youtubeChannel": "NASA Scientific Visualization Studio",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCM2GOiW_Dxn1D7HHP80IrBg",
+      "youtubeDurationSeconds": 143,
+      "durationSeconds": 143.034921,
+      "width": 1920,
+      "height": 540,
+      "sha256": "1cd33c88d2c7cc212a54fa92b027fdf5829926766e0c82b86eeb3119f15fa6e8",
+      "sizeBytes": 29735399,
+      "downloadMethod": "youtube-yt-dlp",
+      "musicCredit": "\"Out on the Tiles\", by Paul Louis Reeves, Cliff Haywood, Publisher: Freshworx Music Limited from Universal Production Music; \"Hip and Happening\", by Gary James Crockett, Jason Glover, Richard Anthony Milner, Publisher: Zone Music Ltd from Universal Production Music."
+    },
+    {
+      "id": "nasa-svs-14121",
+      "title": "The Geocenter of the Earth Is Changing (And Why That Matters)",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/14121/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=54AgCRhdwvo",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a014100/a014121/14121_Geocenter_TWITTER.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/14121/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Katie Jepson. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Katie Jepson",
+            "employer": "KBR Wyle Services, LLC"
+          }
+        ],
+        "Scientific consulting by": [
+          {
+            "name": "Stephen Merkowitz",
+            "employer": "NASA/GSFC"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Trent L. Schindler",
+            "employer": "USRA"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/19-14121-the-geocenter-of-the-earth-is-changing-and-why-that-matters.mp4",
+      "musicCredit": "Kinda Frantic by Steve Rucker [ASCAP]",
+      "youtubeTitle": "The Geocenter of the Earth Is Changing (And Why That Matters)",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 207,
+      "durationSeconds": 207.191655,
+      "width": 1280,
+      "height": 720,
+      "sha256": "af344610a44c78a5070cd65fd6384cf6447ece07b0b7b0aee4389cb8a5b04b4f",
+      "sizeBytes": 17196745,
+      "downloadMethod": "youtube-yt-dlp"
+    },
+    {
+      "id": "nasa-svs-13824",
+      "title": "NASA Satellite Measures the Human Impact in Water Storage",
+      "creator": "NASA",
+      "sourcePage": "https://svs.gsfc.nasa.gov/13824/",
+      "youtubeUrl": "https://www.youtube.com/watch?v=5D7pIijH-4M",
+      "originalDownloadUrl": "https://svs.gsfc.nasa.gov/vis/a010000/a013800/a013824/Reservoirs_prores.webm",
+      "licenseName": "NASA item-specific permission to redistribute the complete program",
+      "licenseUrl": "https://svs.gsfc.nasa.gov/13824/",
+      "permissionQuote": "the video in its entirety can be shared without permission",
+      "rightsScope": "complete-program-only",
+      "rightsNotes": "Retain the full program, narration, music and on-screen credits. Individual licensed music/stock imagery must not be extracted or remixed. NASA endorsement is not granted.",
+      "attribution": "NASA; NASA’s Goddard Space Flight Center; Ryan Fitzgibbons. Full production, visualization, music and third-party credits remain in the program and at the linked source page.",
+      "productionCredits": {
+        "Produced by": [
+          {
+            "name": "Ryan Fitzgibbons",
+            "employer": "USRA"
+          }
+        ],
+        "Edited by": [
+          {
+            "name": "Ryan Fitzgibbons",
+            "employer": "USRA"
+          }
+        ],
+        "Visualizations by": [
+          {
+            "name": "Trent L. Schindler",
+            "employer": "USRA"
+          }
+        ],
+        "Scientific consulting by": [
+          {
+            "name": "Sarah Cooley",
+            "employer": "Stanford University"
+          }
+        ]
+      },
+      "allowedChannels": [
+        "NASA Goddard",
+        "NASA Scientific Visualization Studio",
+        "NASA"
+      ],
+      "path": "media/videos/20-13824-nasa-satellite-measures-the-human-impact-in-water-storage.mp4",
+      "musicCredit": "\"Cycle of the Moon,\" \"Domestic Idyll,\" Universal Production Music",
+      "youtubeTitle": "NASA Satellite Measures Human Impact in Water Storage",
+      "youtubeChannel": "NASA Goddard",
+      "youtubeChannelUrl": "https://www.youtube.com/channel/UCAY-SMFNfynqz1bdoaV8BeQ",
+      "youtubeDurationSeconds": 168,
+      "durationSeconds": 168.158912,
+      "width": 1280,
+      "height": 720,
+      "sha256": "2de80ba0e96c7218eba8c6d0378c0310ea788432e5a2508f5bdf78d3ccf60f8b",
+      "sizeBytes": 35522355,
+      "downloadMethod": "youtube-yt-dlp"
+    }
+  ]
+}

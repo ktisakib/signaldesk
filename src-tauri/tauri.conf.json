@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SignalDesk",
+  "version": "0.1.0",
+  "identifier": "com.signaldesk.studio",
+  "build": {
+    "beforeDevCommand": "npm run dev -- --host 127.0.0.1",
+    "devUrl": "http://127.0.0.1:4321",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "SignalDesk — Broadcast Studio",
+        "width": 1440,
+        "height": 960,
+        "minWidth": 960,
+        "minHeight": 680
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: http://localhost:* http://127.0.0.1:*; connect-src ipc: http://ipc.localhost http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; worker-src 'self' blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/icon.png", "icons/icon.ico"],
+    "resources": { "runtime/": "runtime/" },
+    "shortDescription": "Broadcast a local television channel from one computer",
+    "category": "Video",
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "installer-hooks.nsh"
+      }
+    },
+    "macOS": { "entitlements": "Entitlements.plist" }
+  }
+}

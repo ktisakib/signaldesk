@@ -1,0 +1,98 @@
+name: Windows checks and installer
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: npm ci
+      - run: npm test
+      - run: cargo fmt --all -- --check
+      - name: Check PowerShell parser and archive validation
+        shell: powershell
+        run: |
+          Get-ChildItem scripts/*.ps1 | ForEach-Object {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$tokens, [ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
+          }
+          ./scripts/setup-windows.ps1 -SelfTest
+      - name: Build installer with standalone service
+        shell: powershell
+        run: ./scripts/build-windows.ps1
+      - name: Install the actual NSIS package and verify automatic runtime setup
+        shell: powershell
+        run: |
+          $installer = Get-ChildItem target/release/bundle/nsis/*.exe
+          $destination = Join-Path $env:RUNNER_TEMP 'SignalDesk-installed'
+          $process = Start-Process $installer.FullName -ArgumentList @('/S', "/D=$destination") -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer failed with exit code $($process.ExitCode)" }
+          if (!(Test-Path (Join-Path $destination 'runtime/broadcast-service.exe'))) { throw 'Installed engine is missing.' }
+          foreach ($tool in @('ffmpeg.exe', 'ffprobe.exe', 'mediamtx.exe')) {
+            if (!(Test-Path (Join-Path $env:LOCALAPPDATA "SignalDesk/runtime/bin/$tool"))) { throw "Installer did not set up $tool" }
+          }
+          "SIGNALDESK_INSTALLED_ENGINE=$destination/runtime/broadcast-service.exe" >> $env:GITHUB_ENV
+      - name: Smoke test detached Windows service
+        shell: powershell
+        run: |
+          $env:BROADCAST_HOME = Join-Path $env:RUNNER_TEMP 'signaldesk-smoke'
+          try {
+            ./scripts/start-service.ps1 -ServicePath $env:SIGNALDESK_INSTALLED_ENGINE
+            $health = Invoke-RestMethod http://127.0.0.1:9780/api/health
+            if (!$health.ok -or $health.service -ne 'signaldesk') { throw 'Wrong service health response.' }
+          } finally {
+            Get-Process broadcast-service -ErrorAction SilentlyContinue | Stop-Process -Force
+          }
+      - name: Install verified media tools and test real HLS playout
+        shell: powershell
+        run: |
+          ./scripts/setup-windows.ps1
+          cargo build -p broadcast-service
+          if ($LASTEXITCODE -ne 0) { throw 'Debug service build failed.' }
+          $env:BROADCAST_BIN_DIR = Join-Path $env:LOCALAPPDATA 'SignalDesk\runtime\bin'
+          python scripts/smoke-streaming.py
+          if ($LASTEXITCODE -ne 0) { throw 'Real streaming smoke test failed.' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SignalDesk-windows-x64
+          path: target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+      - name: Publish versioned Windows installer and checksums
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag must match the application version.' }
+          $installer = Get-ChildItem target/release/bundle/nsis/*.exe
+          if ($installer.Count -ne 1) { throw 'Expected exactly one Windows installer.' }
+          $hash = (Get-FileHash $installer.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $($installer.Name)" | Set-Content target/release/bundle/nsis/SHA256SUMS.txt -Encoding utf8NoBOM
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:GITHUB_REF_NAME --title "SignalDesk $version" --notes-file docs/release-notes.md
+            if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
+          }
+          gh release upload $env:GITHUB_REF_NAME $installer.FullName target/release/bundle/nsis/SHA256SUMS.txt --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }

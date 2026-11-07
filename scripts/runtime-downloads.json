@@ -1,0 +1,22 @@
+[
+  {
+    "name": "ffmpeg",
+    "version": "9.0.2",
+    "fileName": "ffmpeg-9.0.2-essentials_build.zip",
+    "url": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip",
+    "checksumUrl": "https://www.gyan.dev/ffmpeg/builds/packages/ffmpeg-9.0.2-essentials_build.zip.sha256",
+    "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+    "source": "https://www.gyan.dev/ffmpeg/builds/",
+    "executables": ["ffmpeg.exe", "ffprobe.exe"]
+  },
+  {
+    "name": "mediamtx",
+    "version": "1.21.3",
+    "fileName": "mediamtx_v1.21.3_windows_amd64.zip",
+    "url": "https://github.com/bluenviron/mediamtx/releases/download/v1.21.3/mediamtx_v1.21.3_windows_amd64.zip",
+    "checksumUrl": "https://github.com/bluenviron/mediamtx/releases/download/v1.21.3/checksums.sha256",
+    "sha256": "b2f5246b07cb72961df03b8d5e8cad43dc657bcf3f49a87bb031bdf22721af74",
+    "source": "https://github.com/bluenviron/mediamtx/releases/tag/v1.21.3",
+    "executables": ["mediamtx.exe"]
+  }
+]
