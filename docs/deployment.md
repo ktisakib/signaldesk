@@ -94,3 +94,13 @@ If the relay image fails its health check, the script attempts to restore the pr
 - A public domain requires routing to a reachable public address and HTTPS. This private IP is LAN-only. HTTP admin credentials must not be sent over the public internet; no Cloudflare Tunnel is configured.
 
 Signing, target-hardware endurance tests, public routing/domain/TLS and Windows camera permissions require validation in the actual deployment environment.
+
+## Initial LAN handover — November 7, 2026
+
+The relay is deployed under `/opt/signaldesk` on `192.168.0.248`, serving the dashboard/HLS on TCP **18088** and contribution on UDP **8890**. Existing services on 8088 were preserved. Channels `laptop-a` and `laptop-b` are provisioned; distribute each private profile only to its broadcaster. Administrator access is provided separately, never in this public repository.
+
+The deployed v0.1.1 relay image was verified against digest `sha256:590ea2fe58f9366985ab08412e95074dab65dc86c41d98f037c684d28122ea6e`. Two isolated broadcaster engines sent a test signal and a prerecorded queue across the LAN, both HLS outputs decoded, live graphics survived the relay, and both publishers recovered after a MediaMTX restart. Profile import, connection test and output start/stop were exercised through the UI. These were software tests, not two physical Windows laptops.
+
+The five-minute image update timer is enabled and its first run completed successfully. A consistent private channel-database snapshot and `.env.relay` backup are stored in `/var/backups/signaldesk/2026-11-07` on the server. Keep independent backups after channel/credential changes; this initial snapshot is not a recurring backup service. Original videos and schedules never went to the relay.
+
+Windows release v0.1.1 passed NSIS installation, automatic runtime setup, detached installed-engine health and real HLS/graphics/queue tests in GitHub Actions. Its first runtime-bootstrap install test failed; the second attempt passed. Installation requires internet and the executable is unsigned. The installer and SHA-256 checksum are published together in GitHub Releases.

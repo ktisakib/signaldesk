@@ -291,7 +291,7 @@ docs/                            Setup, Windows, Docker, networking and rights g
 
 ## Verification status and limits
 
-The development workspace has exercised the macOS desktop, ARM64 Docker broadcaster and relay, two-channel HLS playback, scheduling create/reschedule/cancel, pointer and keyboard queue sorting, credential rejection/rotation and media-server restart recovery. Frontend checks and Rust tests have been run locally. Actual Windows installation, a second physical laptop, touch hardware, sustained audience load and public-domain deployment still need environment-specific acceptance testing.
+The development workspace has exercised the macOS desktop, ARM64 Docker broadcaster and relay, two-channel HLS playback, scheduling create/reschedule/cancel, pointer and keyboard queue sorting, credential rejection/rotation and media-server restart recovery. Frontend checks and Rust tests have been run locally. GitHub Actions has built and silently installed the Windows NSIS package, verified automatic media-tool installation and decoded real HLS with live graphics changes. A physical Windows laptop, a second physical broadcaster, touch hardware, sustained audience load and public-domain deployment still need environment-specific acceptance testing.
 
 Current limits: one pending queue start per local engine; no recurring EPG calendar, automatic recovery of on-air playout after reboot, adaptive bitrate ladder, subscriber authentication or enforced per-channel bitrate quota. Source changes can briefly reconnect output. Native camera capture stops when its window closes. First-time video preparation needs local disk space and time. A public deployment needs HTTPS, restricted administration, firewall review and a reachable relay address.
 
