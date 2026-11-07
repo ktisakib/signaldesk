@@ -52,6 +52,23 @@ jobs:
             if (!(Test-Path (Join-Path $env:LOCALAPPDATA "SignalDesk/runtime/bin/$tool"))) { throw "Installer did not set up $tool" }
           }
           "SIGNALDESK_INSTALLED_ENGINE=$destination/runtime/broadcast-service.exe" >> $env:GITHUB_ENV
+      - name: Verify recovery from local archives with a fresh runtime
+        shell: powershell
+        run: |
+          $archives = Join-Path $env:RUNNER_TEMP 'recovery archives'
+          $runtime = Join-Path $env:RUNNER_TEMP 'recovered runtime'
+          New-Item $archives -ItemType Directory | Out-Null
+          foreach ($tool in (Get-Content scripts/runtime-downloads.json -Raw | ConvertFrom-Json)) {
+            curl.exe --fail --silent --show-error --location --retry 2 --max-time 600 --output "$archives/$($tool.fileName)" $tool.url
+            if ($LASTEXITCODE) { throw "Could not fetch $($tool.fileName)" }
+            curl.exe --fail --silent --show-error --location --retry 2 --max-time 120 --output "$archives/$($tool.fileName).sha256" $tool.checksumUrl
+            if ($LASTEXITCODE) { throw 'Could not fetch the publisher checksum' }
+          }
+          ./scripts/setup-windows.ps1 -ArchiveDirectory $archives -RuntimeDirectory $runtime
+          foreach ($name in @('ffmpeg', 'ffprobe', 'mediamtx')) {
+            $expected = Get-FileHash "$env:LOCALAPPDATA/SignalDesk/runtime/bin/$name.exe"
+            if ((Get-FileHash "$runtime/bin/$name.exe").Hash -ne $expected.Hash) { throw "Offline recovery mismatch: $name" }
+          }
       - name: Smoke test detached Windows service
         shell: powershell
         run: |

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$RuntimeDirectory = (Join-Path $env:LOCALAPPDATA 'SignalDesk\runtime'),
+    [string]$ArchiveDirectory,
     [switch]$SelfTest
 )
 $ErrorActionPreference = 'Stop'
@@ -16,6 +17,30 @@ function Get-PublishedSha256([string]$Content, [string]$FileName) {
     $found = [regex]::Matches($Content, $pattern)
     if ($found.Count -ne 1) { throw "No unique SHA-256 published for $FileName" }
     return $found[0].Groups[1].Value.ToLowerInvariant()
+}
+
+function Get-SetupFile([string]$Url, [string]$Name) {
+    if ($ArchiveDirectory) {
+        $cached = Join-Path $ArchiveDirectory $Name
+        if (!(Test-Path -LiteralPath $cached -PathType Leaf)) { throw "Missing offline setup file: $cached" }
+        return $cached
+    }
+    $destination = Join-Path $temporary $Name
+    $curlDirectory = if ([Environment]::Is64BitProcess) { 'System32' } else { 'Sysnative' }
+    $curl = Join-Path $env:SystemRoot "$curlDirectory\curl.exe"
+    # curl bounds both a stalled transfer and total time. Keep NSIS informed while it runs.
+    $arguments = @('--fail', '--silent', '--show-error', '--location', '--proto', '=https',
+        '--proto-redir', '=https', '--connect-timeout', '20', '--speed-limit', '1024',
+        '--speed-time', '45', '--max-time', '900', '--output', ('"' + $destination + '"'), $Url)
+    $process = Start-Process -FilePath $curl -ArgumentList $arguments -PassThru -NoNewWindow
+    try {
+        while (!$process.WaitForExit(3000)) {
+            $received = Get-Item -LiteralPath $destination -ErrorAction SilentlyContinue
+            Write-Host ("Receiving {0} - {1:N1} MiB" -f $Name, ($received.Length / 1MB))
+        }
+        if ($process.ExitCode -ne 0) { throw "Download failed for $Name (curl exit $($process.ExitCode)). Check the connection to $(([uri]$Url).Host) or use the offline recovery procedure." }
+    } finally { $process.Dispose() }
+    return $destination
 }
 
 if ($SelfTest) {
@@ -69,11 +94,10 @@ try {
     New-Item (Join-Path $staging 'bin') -ItemType Directory -Force | Out-Null
     foreach ($tool in $manifest) {
         if (([uri]$tool.url).Scheme -ne 'https' -or ([uri]$tool.checksumUrl).Scheme -ne 'https') { throw 'Downloads must use HTTPS.' }
-        $archivePath = Join-Path $temporary $tool.fileName
-        Write-Host "Downloading $($tool.name) $($tool.version)..."
-        Invoke-WebRequest $tool.url -OutFile $archivePath -UseBasicParsing
-        $checksumPath = Join-Path $temporary ($tool.fileName + '.sha256')
-        Invoke-WebRequest $tool.checksumUrl -OutFile $checksumPath -UseBasicParsing
+        Write-Host "Preparing $($tool.name) $($tool.version)..."
+        $archivePath = Get-SetupFile $tool.url $tool.fileName
+        $checksumPath = Get-SetupFile $tool.checksumUrl ($tool.fileName + '.sha256')
+        Write-Host "Verifying $($tool.fileName)..."
         $published = Get-Content $checksumPath -Raw
         $expected = Get-PublishedSha256 $published $tool.fileName
         if ($tool.sha256 -and $expected -ne $tool.sha256) { throw "Published checksum changed for $($tool.fileName)" }

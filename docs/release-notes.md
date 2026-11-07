@@ -1,4 +1,6 @@
-Use v0.1.1 or newer on both relay and broadcasters. This release replaces v0.1.0 and keeps the SRT encryption key out of handshake stream-ID metadata.
+Windows installer v0.1.2 shows live media download progress, reports which transfer failed, and bounds connection and transfer waits. The runtime setup also accepts predownloaded, checksum-verified archives for laptops with unreliable connections. See the [Windows recovery instructions](https://github.com/ktisakib/signaldesk/blob/v0.1.2/docs/windows.md#when-the-installer-appears-stuck-on-media-tools).
+
+This desktop update works with the v0.1.1 relay. Existing connection profiles, schedules and media remain valid.
 
 SignalDesk Windows x64 broadcaster and LAN relay deployment.
 

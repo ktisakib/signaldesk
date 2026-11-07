@@ -20,6 +20,25 @@ Return to SignalDesk and recheck the dependencies. Start the test signal and con
 
 For the shared Docker relay, channel credentials, drag-and-drop rundown and scheduling workflow, follow the [complete setup guide](setup-guide.md). The laptop makes an outgoing SRT connection and needs no inbound publishing rule.
 
+## When the installer appears stuck on media tools
+
+Version 0.1.1 hides the downloader output while it runs. On that version, open a separate PowerShell window and run the following command twice, a few seconds apart. A growing ZIP means the download is working.
+
+```powershell
+Get-ChildItem "$env:TEMP\signaldesk-*\*.zip" -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 2 Name, Length, LastWriteTime
+```
+
+From v0.1.2 the installer details show the archive name and received MiB every three seconds during a download. A connection attempt times out after 20 seconds, a transfer below 1 KiB/s for 45 seconds fails, and each request has a 15-minute ceiling. Verification and extraction can take additional time. If Setup reports failure, the foreground repair command above displays the error.
+
+For a laptop that cannot download the tools, use another computer to fetch the two original archives and both checksum files listed in [the runtime manifest](../scripts/runtime-downloads.json). Save each archive with its exact `fileName`, and the corresponding checksum file as `<fileName>.sha256`. Copy these four files into one folder on the laptop. Copy `scripts/setup-windows.ps1` from v0.1.2 or later and its matching `runtime-downloads.json` into a folder beside it. After the previous installer and its downloader have exited, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File ".\setup-windows.ps1" -ArchiveDirectory ".\archives"
+```
+
+Use the same Windows account for the repair and installation. On success, run the SignalDesk installer again. Versions 0.1.1 and 0.1.2 use the same pinned runtime and recognize the preinstalled tools. WebView2 may still need internet on a fresh Windows installation. Keep your media, profile and database in place.
+
 ## Files and background operation
 
 | Location | Purpose |
