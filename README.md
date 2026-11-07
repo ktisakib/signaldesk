@@ -2,7 +2,7 @@
 
 SignalDesk is a desktop and Docker-based broadcasting studio with a shared IPTV relay. Broadcasters manage their own videos, running order, scheduled starts and live cameras on their laptops. Each laptop sends one encrypted SRT stream to a Docker relay, which distributes independent HLS channels to browsers and IPTV players.
 
-**Deploy from prebuilt releases:** [Windows installer](https://github.com/ktisakib/signaldesk/releases/latest) · [VPS / Windows deployment guide](docs/deployment.md). The configured LAN relay target is `192.168.0.248:18088`, with SRT on UDP `8890`. Images are published to `ghcr.io/ktisakib/signaldesk-relay` and `ghcr.io/ktisakib/signaldesk-studio` after streaming checks pass. Installers automatically download and verify the media tools; laptops can import a private connection profile from the relay administrator.
+**Deploy from prebuilt releases:** [Windows installer](https://github.com/ktisakib/signaldesk/releases/latest) · [VPS / Windows deployment guide](docs/deployment.md). The configured LAN relay target is `192.168.0.248:18088`, with SRT on UDP `8890`. Images are published to `ghcr.io/ktisakib/signaldesk-relay` and `ghcr.io/ktisakib/signaldesk-studio` after streaming checks pass. The Windows installer includes the media tools and WebView2; laptops can import a private connection profile from the relay administrator.
 
 **Current release: trusted-LAN testing.** Use a reserved private address for the relay, such as `192.168.1.50`. Broadcaster laptops do not need public IPs, domains, inbound router rules or Cloudflare Tunnel. Public internet deployment requires additional HTTPS and network configuration; the supplied relay gateway uses HTTP.
 
@@ -103,23 +103,23 @@ For exact firewall examples, connection fields and troubleshooting, follow the [
 
 ### Build the Windows installer
 
-On a **Windows x64 build computer**, install Node.js 24, Rust's stable MSVC toolchain, Microsoft C++ Build Tools with **Desktop development with C++**, the Windows SDK and WebView2. See [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
+On a **Windows x64 build computer**, install Node.js 24, Rust's stable MSVC toolchain, Microsoft C++ Build Tools with **Desktop development with C++**, the Windows SDK and WebView2. Install Python 3 and the MSYS2 packages in [the Windows build guide](docs/windows.md#build-an-installer-from-source). See [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
 ```powershell
 npm ci
 npm run build:windows
 ```
 
-The NSIS installer is produced under `target/release/bundle/nsis/`. The [Windows workflow](.github/workflows/windows.yml) builds it on Windows, verifies real HLS playout and publishes the installer plus checksum when a matching `v<version>` tag is pushed. Download builds from [GitHub Releases](https://github.com/ktisakib/signaldesk/releases/latest). FFmpeg, FFprobe and MediaMTX are automatically installed from checksum-verified upstream downloads. Physical laptop and camera endurance tests are still required before an unattended deployment.
+The NSIS installer is produced under `target/release/bundle/nsis/`. The [Windows workflow](.github/workflows/windows.yml) builds it on Windows, verifies real HLS playout and publishes the installer plus checksum when a matching `v<version>` tag is pushed. Download builds from [GitHub Releases](https://github.com/ktisakib/signaldesk/releases/latest). The installer includes FFmpeg, FFprobe and MediaMTX. Physical laptop and camera endurance tests are still required before an unattended deployment.
 
 ### Install on each broadcaster laptop
 
 1. Install the generated `.exe`. End users do not need Node, Rust or C++ Build Tools.
-2. The installer automatically downloads pinned, checksum-verified FFmpeg/FFprobe and MediaMTX into the current user's application directory. Internet access is required during installation. Open **Stream setup** to verify all tools are ready; the displayed PowerShell command is available for repair/source builds.
+2. Open **Stream setup** and verify all three media tools are available.
 3. Recheck dependencies and confirm that the test signal plays locally.
 4. Keep videos on an available local disk. Use **Import media** to register them; importing does not move the original files to the relay.
 
-The installer bundles the Rust engine and setup scripts, but downloads media executables separately. The current installer configuration is unsigned. See [Windows installation, startup and packaging](docs/windows.md) for details.
+The installer includes the Rust engine and an offline WebView2 installer. The current installer configuration is unsigned. See [Windows installation, startup and packaging](docs/windows.md) for details.
 
 A macOS development `.app` can be built with `npm run service:build`, staging the engine in `src-tauri/runtime/`, then `npm run tauri -- build --debug --bundles app`. It requires separately installed media tools; an SRT-enabled FFmpeg build is mandatory. This development bundle is not a notarized macOS release.
 

@@ -4,40 +4,11 @@
 
 Use Windows 10 version 2004 or newer, or Windows 11 x64. ARM and 32-bit Windows are outside this build's support. Use a Windows version that still receives security updates. FFmpeg's selected Windows build requires Windows 10 or newer; Tauri uses Microsoft's WebView2 runtime. [FFmpeg build requirements](https://www.gyan.dev/ffmpeg/builds/), [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
 
-Install the generated SignalDesk NSIS `.exe`, then open SignalDesk. The installer bundles `runtime/broadcast-service.exe` and the setup scripts. It obtains WebView2 if missing; its default bootstrapper requires internet. It does not bundle FFmpeg or MediaMTX binaries. [Tauri's Windows installer documentation](https://v2.tauri.app/distribute/windows-installer/)
+Download the Windows x64 setup file and run it as the user who will broadcast. It includes WebView2, the Rust engine, FFmpeg, FFprobe, MediaMTX and their libraries. After downloading the installer you can install and start a local channel offline. Open **Stream setup**, confirm all three media tools are available, then start the test signal.
 
-The installer runs the checksum-verified media-tool setup automatically as your current Windows user; internet access is required. If a download fails or you use a source build, copy and run the repair command shown in **Stream setup**. It has this form, with the real installed file path filled in by the app:
+If an older setup is waiting on media downloads, close it first. If it cannot exit, save your work and restart Windows before running the new installer. Keep your media and studio database. For an upgrade, stop any active broadcast and exit the app and its background service first.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\SignalDesk\runtime\setup-windows.ps1"
-```
-
-Run it as your normal Windows user. The command bypasses execution policy only for that PowerShell process; it does not alter the machine policy. Organizational policies can still prevent scripts from running. Do not turn off antivirus protection to run the app.
-
-The setup pins FFmpeg 9.0.2 essentials and MediaMTX 1.21.3. It verifies both archives against checked-in SHA-256 hashes and their publishers' checksum manifests over HTTPS. It rejects ambiguous checksums and archive traversal paths, and copies only the expected executables to fixed destinations. Re-running it verifies installed executable hashes and skips unchanged tools. Stop the broadcast before repairing tools that are in use. [Official FFmpeg download providers](https://ffmpeg.org/download.html), [MediaMTX release and checksums](https://github.com/bluenviron/mediamtx/releases/tag/v1.21.3)
-
-Return to SignalDesk and recheck the dependencies. Start the test signal and confirm the preview. Runtime setup does not open internet access; configure that separately with the [network guide](internet-streaming.md).
-
-For the shared Docker relay, channel credentials, drag-and-drop rundown and scheduling workflow, follow the [complete setup guide](setup-guide.md). The laptop makes an outgoing SRT connection and needs no inbound publishing rule.
-
-## When the installer appears stuck on media tools
-
-Version 0.1.1 hides the downloader output while it runs. On that version, open a separate PowerShell window and run the following command twice, a few seconds apart. A growing ZIP means the download is working.
-
-```powershell
-Get-ChildItem "$env:TEMP\signaldesk-*\*.zip" -ErrorAction SilentlyContinue |
-    Sort-Object LastWriteTime -Descending | Select-Object -First 2 Name, Length, LastWriteTime
-```
-
-From v0.1.2 the installer details show the archive name and received MiB every three seconds during a download. A connection attempt times out after 20 seconds, a transfer below 1 KiB/s for 45 seconds fails, and each request has a 15-minute ceiling. Verification and extraction can take additional time. If Setup reports failure, the foreground repair command above displays the error.
-
-For a laptop that cannot download the tools, use another computer to fetch the two original archives and both checksum files listed in [the runtime manifest](../scripts/runtime-downloads.json). Save each archive with its exact `fileName`, and the corresponding checksum file as `<fileName>.sha256`. Copy these four files into one folder on the laptop. Copy `scripts/setup-windows.ps1` from v0.1.2 or later and its matching `runtime-downloads.json` into a folder beside it. After the previous installer and its downloader have exited, run:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File ".\setup-windows.ps1" -ArchiveDirectory ".\archives"
-```
-
-Use the same Windows account for the repair and installation. On success, run the SignalDesk installer again. Versions 0.1.1 and 0.1.2 use the same pinned runtime and recognize the preinstalled tools. WebView2 may still need internet on a fresh Windows installation. Keep your media, profile and database in place.
+For channel credentials and scheduling, see the [complete setup guide](setup-guide.md).
 
 ## Files and background operation
 
@@ -45,7 +16,7 @@ Use the same Windows account for the repair and installation. On success, run th
 | --- | --- |
 | `%LOCALAPPDATA%\SignalDesk\studio.sqlite` | Library, queue, one-time schedule, and settings |
 | `%LOCALAPPDATA%\SignalDesk\runtime\bin` | FFmpeg, FFprobe, and MediaMTX |
-| `%LOCALAPPDATA%\SignalDesk\runtime\licenses` | Downloaded tool license/readme files |
+| `%LOCALAPPDATA%\SignalDesk\runtime\licenses` | Tool license notices and matching source archive links |
 | `%LOCALAPPDATA%\SignalDesk\mediamtx.yml` | Generated media-server configuration |
 | `%LOCALAPPDATA%\SignalDesk\cache` | Normalized queue clips used for continuous playout |
 | `%LOCALAPPDATA%\SignalDesk\relay.json` | Saved relay destination and publishing key; protect profile backups |
@@ -84,14 +55,14 @@ Removing the task leaves the current service running.
 
 ## Build an installer from source
 
-Development prerequisites are Node.js 24 LTS, stable Rust with the MSVC toolchain, Microsoft's C++ Build Tools **Desktop development with C++**, and WebView2. They are only required on the build computer. [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
+Install Python 3 and MSYS2 on the build PC. In its UCRT64 shell run `pacman -Syu`, then `pacman -S mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-binutils`. The build script defaults to `C:\msys64` and accepts `-MsysRoot` for a custom location. Other development prerequisites are Node.js 24 LTS, stable Rust with the MSVC toolchain, Microsoft's C++ Build Tools **Desktop development with C++**, and WebView2. They are only required on the build computer. [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/)
 
 ```powershell
 npm install
 npm run build:windows
 ```
 
-The script runs UI checks, lint, Rust tests, and release builds, then stages the service and scripts as explicitly mapped Tauri resources. It uses NSIS and WebView2's default download bootstrapper. It does not download or redistribute media executables. The installer appears under `target/release/bundle/nsis/`. Code signing is not configured; sign releases before distributing them widely.
+The script runs UI checks, lint, Rust tests, and release builds, then stages the service and scripts as explicitly mapped Tauri resources. It stages the signed MSYS2 media libraries, checksum-verified MediaMTX and the offline WebView2 runtime. The installer appears under `target/release/bundle/nsis/`. Code signing is not configured; sign releases before distributing them widely.
 
 Run `setup-windows.ps1 -SelfTest` to exercise checksum matching and archive path validation without network downloads. The Windows workflow also parses every PowerShell script and builds the installer. A successful CI build still needs an installed-app smoke test on a real Windows machine.
 
@@ -105,7 +76,7 @@ python scripts/smoke-streaming.py
 
 This uses a temporary database and media cache. It generates clips with different codecs, frame rates, and audio layouts, checks the test HLS signal, and fully decodes a looping queue to catch broken transitions. It requires Python 3 and does not change the operator's library.
 
-The Gyan FFmpeg build is GPLv3. The setup downloads it directly from its provider. If you change packaging to redistribute those binaries, preserve license notices and satisfy the corresponding-source obligations for FFmpeg and its included libraries. MediaMTX's release includes its own license. [FFmpeg build licensing](https://www.gyan.dev/ffmpeg/builds/), [MediaMTX license](https://github.com/bluenviron/mediamtx/blob/main/LICENSE)
+The release and installed `runtime/licenses/media/MEDIA-SOURCES.txt` list the matching FFmpeg and library source archives with their build recipes. Bundled license notices are in the same directory. [MSYS2 FFmpeg package](https://packages.msys2.org/packages/mingw-w64-ucrt-x86_64-ffmpeg)
 
 ## Troubleshooting
 

@@ -37,38 +37,33 @@ jobs:
             if ($parseErrors.Count) { throw ($parseErrors | Out-String) }
           }
           ./scripts/setup-windows.ps1 -SelfTest
+      - uses: msys2/setup-msys2@v2
+        id: msys
+        with:
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-binutils
       - name: Build installer with standalone service
         shell: powershell
-        run: ./scripts/build-windows.ps1
-      - name: Install the actual NSIS package and verify automatic runtime setup
+        run: ./scripts/build-windows.ps1 -MsysRoot "${{ steps.msys.outputs.msys2-location }}"
+      - name: Install from a single executable with media downloads blocked
         shell: powershell
         run: |
           $installer = Get-ChildItem target/release/bundle/nsis/*.exe
-          $destination = Join-Path $env:RUNNER_TEMP 'SignalDesk-installed'
-          $process = Start-Process $installer.FullName -ArgumentList @('/S', "/D=$destination") -Wait -PassThru
-          if ($process.ExitCode -ne 0) { throw "Installer failed with exit code $($process.ExitCode)" }
-          if (!(Test-Path (Join-Path $destination 'runtime/broadcast-service.exe'))) { throw 'Installed engine is missing.' }
-          foreach ($tool in @('ffmpeg.exe', 'ffprobe.exe', 'mediamtx.exe')) {
-            if (!(Test-Path (Join-Path $env:LOCALAPPDATA "SignalDesk/runtime/bin/$tool"))) { throw "Installer did not set up $tool" }
+          $destination = Join-Path $env:RUNNER_TEMP 'SignalDesk installed'
+          $env:HTTPS_PROXY = $env:HTTP_PROXY = 'http://127.0.0.1:1'
+          $rule = New-NetFirewallRule -DisplayName 'SignalDesk installer offline test' -Direction Outbound -Program $installer.FullName -Action Block
+          try {
+            $process = Start-Process $installer.FullName -ArgumentList @('/S', "/D=$destination") -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "Installer failed with exit code $($process.ExitCode)" }
+          } finally { $rule | Remove-NetFirewallRule }
+          $bin = Join-Path $destination 'runtime/bin'
+          foreach ($tool in @('ffmpeg', 'ffprobe', 'mediamtx')) {
+            $flag = if ($tool -eq 'mediamtx') { '--version' } else { '-version' }
+            & "$bin/$tool.exe" $flag
+            if ($LASTEXITCODE -ne 0) { throw "Installed $tool failed to launch." }
           }
           "SIGNALDESK_INSTALLED_ENGINE=$destination/runtime/broadcast-service.exe" >> $env:GITHUB_ENV
-      - name: Verify recovery from local archives with a fresh runtime
-        shell: powershell
-        run: |
-          $archives = Join-Path $env:RUNNER_TEMP 'recovery archives'
-          $runtime = Join-Path $env:RUNNER_TEMP 'recovered runtime'
-          New-Item $archives -ItemType Directory | Out-Null
-          foreach ($tool in (Get-Content scripts/runtime-downloads.json -Raw | ConvertFrom-Json)) {
-            curl.exe --fail --silent --show-error --location --retry 2 --max-time 600 --output "$archives/$($tool.fileName)" $tool.url
-            if ($LASTEXITCODE) { throw "Could not fetch $($tool.fileName)" }
-            curl.exe --fail --silent --show-error --location --retry 2 --max-time 120 --output "$archives/$($tool.fileName).sha256" $tool.checksumUrl
-            if ($LASTEXITCODE) { throw 'Could not fetch the publisher checksum' }
-          }
-          ./scripts/setup-windows.ps1 -ArchiveDirectory $archives -RuntimeDirectory $runtime
-          foreach ($name in @('ffmpeg', 'ffprobe', 'mediamtx')) {
-            $expected = Get-FileHash "$env:LOCALAPPDATA/SignalDesk/runtime/bin/$name.exe"
-            if ((Get-FileHash "$runtime/bin/$name.exe").Hash -ne $expected.Hash) { throw "Offline recovery mismatch: $name" }
-          }
+          "BROADCAST_BIN_DIR=$bin" >> $env:GITHUB_ENV
       - name: Smoke test detached Windows service
         shell: powershell
         run: |
@@ -80,13 +75,9 @@ jobs:
           } finally {
             Get-Process broadcast-service -ErrorAction SilentlyContinue | Stop-Process -Force
           }
-      - name: Install verified media tools and test real HLS playout
+      - name: Test actual installed engine and bundled tools with real HLS playout
         shell: powershell
         run: |
-          ./scripts/setup-windows.ps1
-          cargo build -p broadcast-service
-          if ($LASTEXITCODE -ne 0) { throw 'Debug service build failed.' }
-          $env:BROADCAST_BIN_DIR = Join-Path $env:LOCALAPPDATA 'SignalDesk\runtime\bin'
           python scripts/smoke-streaming.py
           if ($LASTEXITCODE -ne 0) { throw 'Real streaming smoke test failed.' }
       - uses: actions/upload-artifact@v4
@@ -111,5 +102,5 @@ jobs:
             gh release create $env:GITHUB_REF_NAME --title "SignalDesk $version" --notes-file docs/release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
           }
-          gh release upload $env:GITHUB_REF_NAME $installer.FullName target/release/bundle/nsis/SHA256SUMS.txt --clobber
+          gh release upload $env:GITHUB_REF_NAME src-tauri/runtime/licenses/media/MEDIA-SOURCES.txt $installer.FullName target/release/bundle/nsis/SHA256SUMS.txt --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }

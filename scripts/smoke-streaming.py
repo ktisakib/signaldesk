@@ -172,7 +172,7 @@ def run_smoke(folder, ffmpeg, ffprobe):
 
 
 def main():
-    service_path = ROOT / "target" / "debug" / ("broadcast-service" + SUFFIX)
+    service_path = Path(os.environ.get("SIGNALDESK_INSTALLED_ENGINE", ROOT / "target" / "debug" / ("broadcast-service" + SUFFIX)))
     if not service_path.is_file():
         raise RuntimeError("Build the service first: cargo build -p broadcast-service")
     ffmpeg, ffprobe = tool("ffmpeg"), tool("ffprobe")

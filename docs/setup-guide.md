@@ -109,7 +109,7 @@ Broadcasters need only their channel ID, publishing key, server address and port
 
 ### Builder: produce the Windows installer
 
-On Windows x64, install Node.js 24, a stable Rust MSVC toolchain, Microsoft C++ Build Tools with Desktop development with C++, the Windows SDK and WebView2. These development tools belong on the build machine, not every broadcaster laptop.
+On Windows x64, install Node.js 24, a stable Rust MSVC toolchain, Microsoft C++ Build Tools with Desktop development with C++, the Windows SDK and WebView2. Install Python 3 and the MSYS2 packages listed in [Windows build prerequisites](windows.md#build-an-installer-from-source). These development tools belong on the build machine, not every broadcaster laptop.
 
 ```powershell
 npm ci
@@ -121,17 +121,11 @@ Find the generated NSIS `.exe` under `target\release\bundle\nsis\`. The script s
 ### Operator: install on the laptop
 
 1. Run the generated installer and open SignalDesk.
-2. The installer automatically downloads and verifies the media tools; installation needs internet. Open **Stream setup** to check readiness. If setup failed, retry the actual repair command displayed by the app. Its form is:
+2. Open **Stream setup**. Confirm FFmpeg, FFprobe and MediaMTX show as available.
+3. Start the local test signal, check the preview, then stop it.
+4. Import local videos and keep their paths available. The library, schedules and cache stay on the laptop.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\actual\installation\runtime\setup-windows.ps1"
-```
-
-3. If repairing or using a source build, run that command as the same Windows user who will broadcast. It downloads pinned media-tool archives, verifies checksums and installs the expected executables.
-4. Recheck tools in the app. Start a local test signal and confirm preview, then stop it.
-5. Import local videos. Keep their original paths/drives available. Source files, SQLite, schedules and normalized cache remain on this laptop.
-
-The setup requires internet for its first downloads. It does not configure the router/firewall or sign-in autostart. Follow [the Windows guide](windows.md) for those optional steps. The executable is unsigned unless the builder configures signing. Test an installed app on Windows before distributing it to clients.
+Setup includes the media tools and WebView2. Follow [the Windows guide](windows.md) for those optional steps. The executable is unsigned unless the builder configures signing. Test an installed app on Windows before distributing it to clients.
 
 ### macOS development test
 

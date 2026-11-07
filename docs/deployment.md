@@ -46,8 +46,8 @@ Open <http://192.168.0.248:18088/relay/>. Obtain `RELAY_ADMIN_TOKEN` from the se
 
 ## Windows laptop
 
-1. Download the installer and `SHA256SUMS.txt` from the release. Verify with `Get-FileHash .\SignalDesk_0.1.1_x64-setup.exe -Algorithm SHA256` (use the actual release filename).
-2. Install on Windows 10 2004+ or Windows 11 x64. The unsigned build may trigger SmartScreen. WebView2 is bootstrapped if missing. No developer tools or Docker are needed.
+1. Download the installer and `SHA256SUMS.txt` from the release. Verify with `Get-FileHash .\SignalDesk_0.1.3_x64-setup.exe -Algorithm SHA256` (use the actual release filename).
+2. Install on Windows 10 2004+ or Windows 11 x64. The unsigned build may trigger SmartScreen. Setup includes WebView2 and the media tools. No developer tools or Docker are needed.
 3. Open SignalDesk → **Relay connection** → **Import a connection profile**, and select the administrator's `.connection.json`. Alternatively enter host `192.168.0.248`, port `8890`, channel ID, publishing key and web address `http://192.168.0.248:18088`.
 4. Click **Test relay connection**. This verifies the web address and channel registration; actual publishing verifies the UDP port and key.
 5. Start the test signal or import local videos, build the queue, and click **Go live**. Click **Enable relay output**. The relay channel becomes LIVE.
@@ -56,7 +56,7 @@ Open <http://192.168.0.248:18088/relay/>. Obtain `RELAY_ADMIN_TOKEN` from the se
 
 For sign-in engine autostart, run the installed `runtime/set-autostart.ps1` once from PowerShell with `-ExecutionPolicy Bypass`. This starts the engine after sign-in; it does **not** automatically put a queue on air. Arm a future scheduled start and enable relay output while the engine is running. The system supports one pending queue start, not a recurring calendar. A reboot does not automatically restart an interrupted show. Configure a new start deliberately after an outage.
 
-Before upgrading, stop broadcasting and exit both SignalDesk and its `broadcast-service` process. User data stays under `%LOCALAPPDATA%\SignalDesk`; uninstalling/upgrading must not delete this folder or original videos. Back up both the database and media separately. Media tools and their upstream license notices are installed in `%LOCALAPPDATA%\SignalDesk\runtime`; `setup-windows.ps1` can repair them. The installer downloads the GPL FFmpeg tools directly from their provider instead of repackaging those binaries.
+Before upgrading, stop broadcasting and exit both SignalDesk and its `broadcast-service` process. User data stays under `%LOCALAPPDATA%\SignalDesk`; uninstalling/upgrading must not delete this folder or original videos. Back up both the database and media separately. The installer places media tools and license notices under the installation directory’s `runtime` folder.
 
 ## Browser broadcaster with a prebuilt image
 

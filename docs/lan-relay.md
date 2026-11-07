@@ -19,7 +19,7 @@ Allow incoming **TCP 8088** (dashboard/HLS) and **UDP 8890** (encrypted publishi
 
 ## Broadcaster desktop
 
-Build/install the Windows application using `scripts/build-windows.ps1` on Windows x64 (CI also builds the NSIS installer). Run the bundled `runtime/setup-windows.ps1` once to install verified FFmpeg/FFprobe/MediaMTX tools. The installed Tauri UI controls a separate local Rust engine; it does not upload your library to the relay.
+Build/install the Windows application using `scripts/build-windows.ps1` on Windows x64 (CI also builds the NSIS installer). The Windows installer includes the media tools. The installed Tauri UI controls a separate local Rust engine; it does not upload your library to the relay.
 
 1. Import files and arrange the playout queue.
 2. Open **LAN relay** in the desktop app.

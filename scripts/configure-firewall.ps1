@@ -16,6 +16,9 @@ if ($Remove) {
     Write-Host 'SignalDesk HLS firewall rule removed.'
     return
 }
+if (!$PSBoundParameters.ContainsKey('MediaMtxPath') -and (Test-Path (Join-Path $PSScriptRoot 'bin\mediamtx.exe'))) {
+    $MediaMtxPath = Join-Path $PSScriptRoot 'bin\mediamtx.exe'
+}
 if (!(Test-Path $MediaMtxPath -PathType Leaf)) { throw 'Run setup-windows.ps1 first, or pass the installed MediaMTX path.' }
 $program = (Resolve-Path $MediaMtxPath).Path
 Get-NetFirewallRule -DisplayName $name -ErrorAction SilentlyContinue | Remove-NetFirewallRule

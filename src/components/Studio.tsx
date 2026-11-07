@@ -1464,7 +1464,7 @@ function StreamSetup({
                     ? "Docker includes FFmpeg, FFprobe, and MediaMTX. Your library, uploads, and prepared videos stay in the persistent data volume. To start the app from its project folder:"
                     : toolsReady
                       ? "FFmpeg, FFprobe and MediaMTX are available. Open Relay connection to import the profile supplied by your administrator, then start a local test signal."
-                      : "Release installers automatically set up FFmpeg, FFprobe and MediaMTX. For a source build or runtime repair, run the bundled setup in PowerShell:"}
+                      : "The Windows installer includes all three media tools. Run the installer again to replace missing files. For a source build, use the command below."}
                 </p>
                 {(!toolsReady || diagnostics?.webMode) && (
                   <CodeCopy
