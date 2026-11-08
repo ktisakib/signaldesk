@@ -102,7 +102,7 @@ jobs:
           "$hash  $($installer.Name)" | Set-Content target/release/bundle/nsis/SHA256SUMS.txt -Encoding utf8NoBOM
           gh release view $env:GITHUB_REF_NAME *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $env:GITHUB_REF_NAME --title "SignalDesk $version" --notes-file docs/release-notes.md
+            gh release create $env:GITHUB_REF_NAME --draft --title "SignalDesk $version" --notes-file docs/release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
           }
           $signature = Get-Content "$($installer.FullName).sig" -Raw
@@ -112,3 +112,5 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Updater artifact upload failed.' }
           gh release upload $env:GITHUB_REF_NAME src-tauri/runtime/licenses/media/MEDIA-SOURCES.txt $installer.FullName target/release/bundle/nsis/SHA256SUMS.txt --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }
+          gh release edit $env:GITHUB_REF_NAME --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }
