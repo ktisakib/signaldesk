@@ -62,7 +62,7 @@ jobs:
             $url = 'http://127.0.0.1:8888/live/index.m3u8'
             $playlist = $false
             foreach ($i in 1..30) {
-              $manifest = curl.exe --noproxy '*' --fail --silent --max-time 2 $url
+              $manifest = curl.exe --noproxy '*' --location --fail --silent --max-time 5 $url
               $playlist = ($LASTEXITCODE -eq 0) -and ($manifest -contains '#EXTM3U')
               if ($playlist) { break }
               Start-Sleep -Seconds 1
