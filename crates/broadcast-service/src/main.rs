@@ -250,6 +250,7 @@ struct Runtime {
     generation: u64,
     live_queue: Option<watch::Sender<Vec<PreparedItem>>>,
     history: Vec<live_queue::Segment>,
+    encoder_clock: f64,
 }
 
 struct AppState {
@@ -1061,6 +1062,7 @@ async fn read_progress(
             }
             if key == "out_time_us" && !runtime.history.is_empty() {
                 let clock = (value.parse::<f64>().unwrap_or(0.) / 1_000_000.).max(0.);
+                runtime.encoder_clock = clock;
                 if let Some(segment) = runtime
                     .history
                     .iter()

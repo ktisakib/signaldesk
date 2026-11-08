@@ -30,14 +30,26 @@ pub(crate) async fn run(
     stop: &mut watch::Receiver<bool>,
 ) -> Result<(), String> {
     let (updates, receiver) = watch::channel(prepared);
-    state.runtime.lock().await.live_queue = Some(updates);
+    {
+        let mut runtime = state.runtime.lock().await;
+        runtime.live_queue = Some(updates);
+        runtime.encoder_clock = 0.;
+    }
     let mut args = queue_args(config, std::path::Path::new("pipe:0"));
     let input = args.iter().position(|arg| arg == "-f").unwrap();
     let maps = args.iter().position(|arg| arg == "-map").unwrap();
     let pacing = args.iter().position(|arg| arg == "-re").unwrap();
     args.splice(
         pacing..input,
-        ["-re".into(), "-dts_delta_threshold".into(), "0.1".into()],
+        [
+            "-re".into(),
+            "-dts_delta_threshold".into(),
+            "0.1".into(),
+            "-probesize".into(),
+            "18800".into(),
+            "-analyzeduration".into(),
+            "1".into(),
+        ],
     );
     let input = args.iter().position(|arg| arg == "-f").unwrap();
     let maps = args.iter().position(|arg| arg == "-map").unwrap_or(maps);
@@ -58,11 +70,25 @@ pub(crate) async fn run(
     let looping = config.loop_queue;
     let mut feeder_stop = stop.clone();
     let feeder = tokio::spawn(async move {
-        let mut index = 0;
+        let mut current = None;
         let mut clock = 0.;
         let mut buffer = vec![0; 188 * 128];
         loop {
+            // Bound look-ahead by program time, even when a low-bitrate clip fits in the OS pipe.
+            while clock > feeder_state.runtime.lock().await.encoder_clock + 2.0 {
+                tokio::select! {
+                    _ = tokio::time::sleep(Duration::from_millis(40)) => {},
+                    _ = feeder_stop.changed() => return Ok::<(), String>(()),
+                }
+            }
             let items = receiver.borrow().clone();
+            let index = match current {
+                Some(current) => match next_index(&items, &current, looping) {
+                    Some(index) => index,
+                    None => break,
+                },
+                None => 0,
+            };
             let Some(item) = items.get(index).cloned() else {
                 break;
             };
@@ -87,11 +113,7 @@ pub(crate) async fn run(
                 }
             }
             clock += item.duration;
-            let next = receiver.borrow().clone();
-            match next_index(&next, &(item.id, item.occurrence), looping) {
-                Some(i) => index = i,
-                None => break,
-            }
+            current = Some((item.id, item.occurrence));
         }
         Ok(())
     });
