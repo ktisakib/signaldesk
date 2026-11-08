@@ -59,6 +59,9 @@ Install Python 3 and MSYS2 on the build PC. In its UCRT64 shell run `pacman -Syu
 
 ```powershell
 npm install
+# Release builds need the private updater key provided by the administrator.
+$env:TAURI_SIGNING_PRIVATE_KEY = 'C:\private\updater.key'
+$env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ''
 npm run build:windows
 ```
 
@@ -91,3 +94,8 @@ The release and installed `runtime/licenses/media/MEDIA-SOURCES.txt` list the ma
 | Build fails in the linker | Install the C++ desktop workload and Windows SDK; restart your development terminal. |
 
 For a source build, `scripts/start-service.ps1` redirects startup output to `service.stdout.log` and `service.stderr.log` in the data directory. The live dashboard shows the broadcast log. Do not expose the local control API to troubleshoot public streaming.
+
+
+The release pipeline keeps updater signing credentials in GitHub Actions secrets. The installed application contains only the public key. The signing key is required to generate updater artifacts from a local release build. Desktop development with `npm run desktop` uses the normal development workflow.
+
+Windows v0.1.3 requires a one-time manual upgrade to v0.1.4 to gain in-app updates. The update installer runs only after the local broadcaster has stopped and its engine has shut down. The release's `latest.json` contains the Windows installer URL and its signature. [Tauri updater reference](https://v2.tauri.app/plugin/updater/)
