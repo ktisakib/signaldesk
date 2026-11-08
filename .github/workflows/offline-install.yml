@@ -63,13 +63,16 @@ jobs:
             $url = 'http://127.0.0.1:8888/live/index.m3u8'
             $playlist = $false
             foreach ($i in 1..30) {
-              try { $playlist = (Invoke-WebRequest $url -NoProxy -TimeoutSec 2).Content -match '#EXTM3U' } catch {}
+              $manifest = curl.exe --noproxy '*' --fail --silent --max-time 2 $url
+              $playlist = ($LASTEXITCODE -eq 0) -and ($manifest -contains '#EXTM3U')
               if ($playlist) { break }
               Start-Sleep -Seconds 1
             }
             if (!$playlist) { throw 'HLS test signal did not appear' }
             $progress = & "$destination/runtime/bin/ffmpeg.exe" -nostdin -v error -xerror -rw_timeout 10000000 -i $url -t 5 -map 0:v:0 -f null - -progress pipe:1
-            if ($LASTEXITCODE -or !($progress -match '^out_time_us=([5-9]\d{6}|\d{8,})$') -or !($progress -match '^progress=end$')) { throw "Could not decode five seconds of test video: $progress" }
+            $decodeExit = $LASTEXITCODE
+            $frames = $progress | Select-String '^frame=(\d+)$' | Select-Object -Last 1
+            if ($decodeExit -or !$frames -or [int]$frames.Matches[0].Groups[1].Value -lt 125 -or !($progress -contains 'progress=end')) { throw "Could not decode five seconds of test video: $progress" }
             Write-Host 'PASS: installed desktop started and its live HLS test signal decoded for five seconds offline'
           } finally {
             $rule | Remove-NetFirewallRule
