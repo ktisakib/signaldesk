@@ -52,6 +52,24 @@ export default function Rundown({
     [error, setError] = useState("");
   const pending = useRef(false);
   const refresh = useStudio((s) => s.refresh);
+  const status = useStudio((s) => s.status);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const currentUid =
+    status?.currentMediaId == null
+      ? null
+      : `${status.currentMediaId}:${status.currentOccurrence ?? 0}`;
+  const currentIndex = order.findIndex((e) => e.uid === currentUid);
+  const active = status?.source === "queue" && status.state === "live";
+  const currentOffset =
+    currentIndex < 0 ? 0 : queueOffsets(order.map((e) => e.item))[currentIndex];
+  const anchor =
+    active && status?.currentStartedAt
+      ? Date.parse(status.currentStartedAt) - currentOffset * 1000
+      : now;
   useEffect(() => {
     if (!pending.current) setOrder(entries(items));
   }, [items]);
@@ -102,6 +120,7 @@ export default function Rundown({
   const locked = disabled || saving;
   return (
     <>
+      {active && currentIndex < 0 && <p role="status" className="program-playing">On air · {status.currentTitle} · {duration(status.currentElapsedSeconds ?? 0)} elapsed</p>}
       <div className="rundown-tools">
         <span>
           {saving ? (
@@ -159,6 +178,11 @@ export default function Rundown({
                 entry={entry}
                 index={index}
                 offset={offsets[index]}
+                clock={new Date(
+                  anchor + offsets[index] * 1000,
+                ).toLocaleTimeString()}
+                playing={active && entry.uid === currentUid}
+                elapsed={status?.currentElapsedSeconds ?? 0}
                 total={order.length}
                 disabled={locked}
                 onMove={(to) =>
@@ -194,6 +218,9 @@ function SortableRow({
   entry,
   index,
   offset,
+  clock,
+  playing,
+  elapsed,
   total,
   disabled,
   onMove,
@@ -202,6 +229,9 @@ function SortableRow({
   entry: Entry;
   index: number;
   offset: number;
+  clock: string;
+  playing: boolean;
+  elapsed: number;
   total: number;
   disabled: boolean;
   onMove: (to: number) => void;
@@ -226,9 +256,11 @@ function SortableRow({
         transition,
         opacity: isDragging ? 0.3 : 1,
       }}
-      className="rundown-row sortable-row"
+      className={`rundown-row sortable-row ${playing ? "program-playing" : ""}`}
     >
-      <span className="mono muted">{duration(offset)}</span>
+      <span className="mono muted" title={`Offset ${duration(offset)}`}>
+        {clock}
+      </span>
       <div className="rundown-title">
         <Button
           ref={setActivatorNodeRef}
@@ -247,8 +279,12 @@ function SortableRow({
           <Film size={19} />
         </span>
         <div>
-          <strong>{item.title}</strong>
+          <strong>
+            {playing && <span className="on-air-label">ON AIR </span>}
+            {item.title}
+          </strong>
           <small>
+            {playing ? `${duration(elapsed)} elapsed · ` : ""}
             {item.width} × {item.height} ·{" "}
             {item.hasAudio ? "With audio" : "Silent"}
           </small>

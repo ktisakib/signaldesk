@@ -146,10 +146,93 @@ async fn pick_media(app: tauri::AppHandle) -> Result<Option<String>, String> {
     receive.await.map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+async fn pick_media_files(app: tauri::AppHandle) -> Result<Vec<String>, String> {
+    let (send, receive) = tokio::sync::oneshot::channel();
+    app.dialog()
+        .file()
+        .add_filter(
+            "Video",
+            &[
+                "mp4", "mkv", "mov", "avi", "ts", "m4v", "webm", "mpeg", "mpg",
+            ],
+        )
+        .pick_files(move |files| {
+            let _ = send.send(
+                files
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|f| f.to_string())
+                    .collect(),
+            );
+        });
+    receive.await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn check_update(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let update = app
+        .updater()
+        .map_err(|e| e.to_string())?
+        .check()
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(match update {
+        Some(update) => serde_json::json!({ "version": update.version, "notes": update.body }),
+        None => serde_json::Value::Null,
+    })
+}
+
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_updater::UpdaterExt;
+    let update = app
+        .updater()
+        .map_err(|e| e.to_string())?
+        .check()
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or("No update is available")?;
+    let bytes = update
+        .download(|_, _| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    let client = reqwest::Client::new();
+    let response = client
+        .post(format!("{SERVICE_URL}/api/system/shutdown"))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    if !response.status().is_success() {
+        return Err("Stop the broadcast before installing the update".into());
+    }
+    for _ in 0..40 {
+        if client
+            .get(format!("{SERVICE_URL}/api/health"))
+            .send()
+            .await
+            .is_err()
+        {
+            update.install(bytes).map_err(|e| e.to_string())?;
+            app.restart();
+        }
+        tokio::time::sleep(Duration::from_millis(250)).await;
+    }
+    Err("Engine is still shutting down. Retry the update.".into())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![api_request, pick_media])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![
+            api_request,
+            pick_media,
+            pick_media_files,
+            check_update,
+            install_update
+        ])
         .run(tauri::generate_context!())
         .expect("Unable to run the SignalDesk desktop app");
 }

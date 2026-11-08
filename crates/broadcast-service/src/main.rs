@@ -34,6 +34,7 @@ use tower_http::services::{ServeDir, ServeFile};
 
 mod camera;
 mod graphics;
+mod live_queue;
 mod relay;
 mod schedule;
 mod srt_auth;
@@ -41,6 +42,7 @@ mod youtube;
 
 const ADDRESS: &str = "127.0.0.1:9780";
 const MAX_UPLOAD_BYTES: usize = 2 * 1024 * 1024 * 1024;
+static SHUTDOWN: tokio::sync::Notify = tokio::sync::Notify::const_new();
 static UPLOAD_ID: AtomicU64 = AtomicU64::new(0);
 type ApiResult<T> = Result<Json<T>, ApiError>;
 
@@ -204,6 +206,10 @@ struct BroadcastStatus {
     state: String,
     source: Option<String>,
     current_title: Option<String>,
+    current_media_id: Option<i64>,
+    current_occurrence: usize,
+    current_elapsed_seconds: f64,
+    current_started_at: Option<String>,
     started_at: Option<String>,
     bitrate_kbps: f64,
     fps: f64,
@@ -220,6 +226,10 @@ impl Default for BroadcastStatus {
             state: "idle".into(),
             source: None,
             current_title: None,
+            current_media_id: None,
+            current_occurrence: 0,
+            current_elapsed_seconds: 0.,
+            current_started_at: None,
             started_at: None,
             bitrate_kbps: 0.,
             fps: 0.,
@@ -238,6 +248,8 @@ struct Runtime {
     stop: Option<watch::Sender<bool>>,
     task: Option<JoinHandle<()>>,
     generation: u64,
+    live_queue: Option<watch::Sender<Vec<PreparedItem>>>,
+    history: Vec<live_queue::Segment>,
 }
 
 struct AppState {
@@ -246,6 +258,7 @@ struct AppState {
     runtime: Mutex<Runtime>,
     media_server: Mutex<Option<Child>>,
     actions: Mutex<()>,
+    queue_preparation: Mutex<()>,
     web_root: Option<PathBuf>,
     bind_address: String,
     camera: Mutex<Option<camera::PendingCamera>>,
@@ -606,9 +619,6 @@ async fn put_queue(
     Json(body): Json<QueueUpdate>,
 ) -> ApiResult<Vec<MediaItem>> {
     let _action = state.actions.lock().await;
-    if state.runtime.lock().await.stop.is_some() {
-        return Err(invalid("Stop the broadcast before editing its queue"));
-    }
     if body.ids.len() > 1000 {
         return Err(invalid("Queue is limited to 1000 entries"));
     }
@@ -631,7 +641,43 @@ async fn put_queue(
             .await?;
     }
     tx.commit().await?;
-    Ok(Json(library_rows(&state, true).await?))
+    let queue = library_rows(&state, true).await?;
+    if let Some(sender) = state.runtime.lock().await.live_queue.clone() {
+        let state = Arc::clone(&state);
+        let snapshot = queue.clone();
+        tokio::spawn(async move {
+            let result = async {
+                let config = settings(&state).await.map_err(|e| format!("{e:?}"))?;
+                let mut stop = state
+                    .runtime
+                    .lock()
+                    .await
+                    .stop
+                    .as_ref()
+                    .ok_or("Broadcast stopped")?
+                    .subscribe();
+                let prepared = prepare_queue(&state, &config, &snapshot, &mut stop).await?;
+                let latest = library_rows(&state, true)
+                    .await
+                    .map_err(|e| format!("{e:?}"))?;
+                if latest
+                    .iter()
+                    .map(|i| i.id)
+                    .eq(snapshot.iter().map(|i| i.id))
+                {
+                    if let Some(prepared) = prepared {
+                        let _ = sender.send(prepared);
+                    }
+                }
+                Ok::<(), String>(())
+            }
+            .await;
+            if let Err(error) = result {
+                log_line(&state, format!("Queue update: {error}")).await;
+            }
+        });
+    }
+    Ok(Json(queue))
 }
 
 async fn get_settings(State(state): State<Arc<AppState>>) -> ApiResult<Settings> {
@@ -955,11 +1001,14 @@ fn queue_args(config: &Settings, playlist: &std::path::Path) -> Vec<String> {
 
 #[derive(Clone)]
 struct PreparedItem {
+    id: i64,
+    occurrence: usize,
     title: String,
     path: PathBuf,
     duration: f64,
 }
 
+#[cfg(test)]
 fn concat_entry(path: &std::path::Path) -> Result<String, String> {
     let path = path
         .to_str()
@@ -1009,6 +1058,32 @@ async fn read_progress(
                 runtime.status.state = "live".into();
                 // RTSP reports no muxed bitrate; this is the configured encoder target.
                 runtime.status.bitrate_kbps = bitrate as f64;
+            }
+            if key == "out_time_us" && !runtime.history.is_empty() {
+                let clock = (value.parse::<f64>().unwrap_or(0.) / 1_000_000.).max(0.);
+                if let Some(segment) = runtime
+                    .history
+                    .iter()
+                    .rev()
+                    .find(|s| s.start <= clock)
+                    .cloned()
+                {
+                    runtime.status.current_title = Some(segment.item.title);
+                    runtime.status.current_media_id = Some(segment.item.id);
+                    runtime.status.current_occurrence = segment.item.occurrence;
+                    runtime.status.current_started_at = Some(
+                        (chrono::Utc::now()
+                            - chrono::Duration::milliseconds(
+                                ((clock - segment.start).max(0.) * 1000.) as i64,
+                            ))
+                        .to_rfc3339(),
+                    );
+                    runtime.status.current_elapsed_seconds =
+                        (clock - segment.start).min(segment.item.duration);
+                    runtime
+                        .history
+                        .retain(|s| s.start + s.item.duration >= clock - 1.);
+                }
             }
             if key == "out_time_us" && duration > 0. {
                 let mut position =
@@ -1089,17 +1164,23 @@ async fn prepare_queue(
     queue: &[MediaItem],
     stop: &mut watch::Receiver<bool>,
 ) -> Result<Option<Vec<PreparedItem>>, String> {
+    let _preparation = state.queue_preparation.lock().await;
     let cache = state.home.join("cache");
     tokio::fs::create_dir_all(&cache)
         .await
         .map_err(|e| e.to_string())?;
     let mut prepared = Vec::new();
+    let mut occurrences = std::collections::HashMap::new();
     for item in queue {
         if *stop.borrow() {
             return Ok(None);
         }
-        state.runtime.lock().await.status.current_title =
-            Some(format!("Preparing: {}", item.title));
+        {
+            let mut runtime = state.runtime.lock().await;
+            if runtime.status.state == "starting" {
+                runtime.status.current_title = Some(format!("Preparing: {}", item.title));
+            }
+        }
         let metadata = tokio::fs::metadata(&item.path)
             .await
             .map_err(|_| format!("Video is missing: {}", item.title))?;
@@ -1157,19 +1238,15 @@ async fn prepare_queue(
             .and_then(|value| value.parse::<f64>().ok())
             .filter(|duration| duration.is_finite() && *duration > 0.)
             .ok_or("Prepared video duration is invalid")?;
+        let occurrence = occurrences.entry(item.id).or_insert(0);
         prepared.push(PreparedItem {
+            id: item.id,
+            occurrence: *occurrence,
             title: item.title.clone(),
             path: output,
             duration,
         });
-    }
-    let mut files = tokio::fs::read_dir(&cache)
-        .await
-        .map_err(|e| e.to_string())?;
-    while let Some(file) = files.next_entry().await.map_err(|e| e.to_string())? {
-        if !prepared.iter().any(|item| item.path == file.path()) {
-            let _ = tokio::fs::remove_file(file.path()).await;
-        }
+        *occurrence += 1;
     }
     Ok(Some(prepared))
 }
@@ -1198,28 +1275,22 @@ async fn playout(
                 return Err("The test signal stopped unexpectedly".into());
             }
         } else {
-            let Some(prepared) = prepare_queue(&state, &config, &queue, &mut stop).await? else {
-                return Ok(());
+            let mut queue = queue;
+            let prepared = loop {
+                let Some(prepared) = prepare_queue(&state, &config, &queue, &mut stop).await?
+                else {
+                    return Ok(());
+                };
+                let latest = library_rows(&state, true)
+                    .await
+                    .map_err(|e| format!("{e:?}"))?;
+                if latest.iter().map(|i| i.id).eq(queue.iter().map(|i| i.id)) {
+                    break prepared;
+                }
+                queue = latest;
             };
-            let mut playlist = "ffconcat version 1.0\n".to_string();
-            for item in &prepared {
-                playlist.push_str(&concat_entry(&item.path)?);
-            }
-            let playlist_path = state.home.join("queue.ffconcat");
-            tokio::fs::write(&playlist_path, playlist)
-                .await
-                .map_err(|e| e.to_string())?;
-            state.runtime.lock().await.status.current_title =
-                prepared.first().map(|item| item.title.clone());
-            run_ffmpeg(
-                &state,
-                queue_args(&config, &playlist_path),
-                &mut stop,
-                true,
-                config.bitrate_kbps,
-                prepared,
-            )
-            .await?;
+            state.runtime.lock().await.history.clear();
+            live_queue::run(&state, &config, prepared, &mut stop).await?;
         }
         Ok(())
     }
@@ -1229,6 +1300,8 @@ async fn playout(
     runtime.status.fps = 0.;
     runtime.status.bitrate_kbps = 0.;
     runtime.status.current_title = None;
+    runtime.status.current_media_id = None;
+    runtime.history.clear();
     runtime.status.started_at = None;
     match result {
         Ok(()) => {
@@ -1245,6 +1318,15 @@ async fn playout(
         youtube::stop(&state).await;
         relay::stop(&state).await;
     }
+}
+
+async fn shutdown_for_update(State(state): State<Arc<AppState>>) -> ApiResult<Value> {
+    let _action = state.actions.lock().await;
+    if state.runtime.lock().await.stop.is_some() {
+        return Err(invalid("Stop broadcasting before installing an update"));
+    }
+    SHUTDOWN.notify_one();
+    Ok(Json(json!({"ok": true})))
 }
 
 async fn stop_broadcast(State(state): State<Arc<AppState>>) -> ApiResult<Value> {
@@ -1449,6 +1531,7 @@ fn router(state: Arc<AppState>) -> Router {
         .route("/api/queue", get(get_queue).put(put_queue))
         .route("/api/settings", get(get_settings).put(put_settings))
         .route("/api/diagnostics", get(diagnostics))
+        .route("/api/system/shutdown", post(shutdown_for_update))
         .route("/api/broadcast/start", post(start_broadcast))
         .route("/api/broadcast/stop", post(stop_broadcast))
         .route("/api", get(|| async { StatusCode::NOT_FOUND }))
@@ -1497,6 +1580,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         runtime: Mutex::default(),
         media_server: Mutex::default(),
         actions: Mutex::default(),
+        queue_preparation: Mutex::default(),
         web_root,
         bind_address,
         camera: Mutex::default(),
@@ -1516,7 +1600,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let shutdown_state = Arc::clone(&state);
     axum::serve(listener, router(Arc::clone(&state)))
         .with_graceful_shutdown(async move {
-            let _ = tokio::signal::ctrl_c().await;
+            tokio::select! { _ = tokio::signal::ctrl_c() => {}, _ = SHUTDOWN.notified() => {} }
             graphics::stop(&shutdown_state);
             youtube::stop(&shutdown_state).await;
             relay::stop(&shutdown_state).await;
@@ -1592,6 +1676,7 @@ mod tests {
             runtime: Mutex::default(),
             media_server: Mutex::default(),
             actions: Mutex::default(),
+            queue_preparation: Mutex::default(),
             web_root: None,
             bind_address: ADDRESS.into(),
             camera: Mutex::default(),
@@ -1698,6 +1783,7 @@ mod tests {
             runtime: Mutex::default(),
             media_server: Mutex::default(),
             actions: Mutex::default(),
+            queue_preparation: Mutex::default(),
             web_root: Some(root),
             bind_address: "0.0.0.0:9780".into(),
             camera: Mutex::default(),
@@ -1708,14 +1794,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn active_playout_rejects_queue_and_media_removal() {
+    async fn active_playout_accepts_queue_edits_but_protects_media() {
         let s = web_test_state("active-queue").await;
         let (sender, _) = watch::channel(false);
         s.runtime.lock().await.stop = Some(sender);
         assert!(
             put_queue(State(s.clone()), Json(QueueUpdate { ids: vec![] }))
                 .await
-                .is_err()
+                .is_ok()
         );
         assert!(delete_media(State(s.clone()), Path(1)).await.is_err());
         s.runtime.lock().await.stop = None;

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SignalDesk",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "identifier": "com.signaldesk.studio",
   "build": {
     "beforeDevCommand": "npm run dev -- --host 127.0.0.1",
@@ -44,6 +44,19 @@
     },
     "macOS": {
       "entitlements": "Entitlements.plist"
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEEwNUNFRDc3QTRGOTlDOEYKUldTUG5QbWtkKzFjb1BjY0ZlM0p0NVdTc1R4QUE2aTkwcUVuOEpsa1phTUFFeDllNFJTR2tnQmYK",
+      "endpoints": [
+        "https://github.com/ktisakib/signaldesk/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      },
+      "requireSignedVersion": true
     }
   }
 }

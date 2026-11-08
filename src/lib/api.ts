@@ -24,6 +24,10 @@ export interface BroadcastStatus {
   state: "idle" | "starting" | "live" | "error";
   source: "test" | "queue" | "camera" | null;
   currentTitle: string | null;
+  currentMediaId?: number | null;
+  currentOccurrence?: number;
+  currentElapsedSeconds?: number;
+  currentStartedAt?: string | null;
   startedAt: string | null;
   bitrateKbps: number;
   fps: number;

@@ -67,6 +67,8 @@ import { bytes, duration, viewerCapacity } from "@/lib/format";
 import { useStudio } from "@/lib/store";
 import LiveProduction from "@/components/LiveProduction";
 import RelayConnection from "@/components/RelayConnection";
+import AppUpdates from "@/components/AppUpdates";
+import MediaDropZone from "@/components/MediaDropZone";
 import Rundown from "@/components/Rundown";
 import SchedulePanel from "@/components/SchedulePanel";
 import BroadcastGraphics from "@/components/BroadcastGraphics";
@@ -310,6 +312,7 @@ export default function Studio() {
           </div>
         </header>
         <main id="main-content" className="main-content">
+          <AppUpdates />
           <div className="page-heading">
             <div>
               <div className="eyebrow">YOUR BROADCAST, UNDER CONTROL</div>
@@ -656,10 +659,13 @@ export default function Studio() {
           )}
 
           {page === "library" && (
+            <>
+            <MediaDropZone />
             <MediaLibrary
               items={library}
               busy={busy}
-              disabled={!connected || !!active}
+              deleteDisabled={!!active}
+              disabled={!connected}
               onImport={openImport}
               onAdd={(item) => void addToQueue(item)}
               onDelete={(item) =>
@@ -669,6 +675,7 @@ export default function Studio() {
                 )
               }
             />
+            </>
           )}
           {page === "queue" && (
             <section className="panel queue-workspace">
@@ -682,7 +689,7 @@ export default function Studio() {
                     </Badge>
                   </h2>
                   <span>
-                    Starts at 00:00 when you go live ·{" "}
+                    Local clock · estimated program starts ·{" "}
                     {duration(
                       queue.reduce(
                         (sum, item) => sum + item.durationSeconds,
@@ -720,7 +727,7 @@ export default function Studio() {
                   </div>
                   <Rundown
                     items={queue}
-                    disabled={!connected || busy || !!active}
+                    disabled={!connected || busy}
                   />
                 </>
               ) : (
@@ -744,10 +751,7 @@ export default function Studio() {
                 >
                   Schedule this lineup
                 </Button>
-                Times are relative to broadcast start.{" "}
-                {active
-                  ? "Stop the broadcast to edit this queue."
-                  : "Changes are saved on this computer."}
+                Local clock times are estimates. Live edits apply after media preparation at the next available program boundary.
               </div>
             </section>
           )}
@@ -1100,6 +1104,7 @@ function MediaLibrary({
   items,
   busy,
   disabled,
+  deleteDisabled,
   onImport,
   onAdd,
   onDelete,
@@ -1107,6 +1112,7 @@ function MediaLibrary({
   items: MediaItem[];
   busy: boolean;
   disabled: boolean;
+  deleteDisabled: boolean;
   onImport: () => void;
   onAdd: (item: MediaItem) => void;
   onDelete: (item: MediaItem) => void;
@@ -1180,7 +1186,7 @@ function MediaLibrary({
                             <Plus size={14} /> Queue
                           </Button>
                           <button
-                            disabled={busy || disabled}
+                            disabled={busy || disabled || deleteDisabled}
                             className="icon-button"
                             aria-label={`Remove ${item.title} from library`}
                             onClick={() => onDelete(item)}

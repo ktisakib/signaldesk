@@ -166,6 +166,23 @@ def run_smoke(folder, ffmpeg, ffprobe):
         if decoder.poll() is None:
             decoder.kill()
         decoder.wait()
+    api("/api/queue", "PUT", {"ids": [second["id"]]})
+    deadline = time.time() + 25
+    while time.time() < deadline:
+        status = api("/api/status")
+        assert status["state"] == "live", status
+        if status.get("currentMediaId") == second["id"]:
+            break
+        time.sleep(0.3)
+    else:
+        raise AssertionError("Edited queue never reached the selected program")
+    subprocess.run([ffmpeg, "-nostdin", "-v", "error", "-xerror", "-i",
+                    HLS + "/live/index.m3u8", "-t", "12", "-f", "null", "-"],
+                   check=True, timeout=35)
+    status = api("/api/status")
+    assert status["state"] == "live" and status["currentMediaId"] == second["id"], status
+    assert status["currentElapsedSeconds"] >= 0
+    print("PASS: edit a live queue and decode uninterrupted playback of its replacement lineup", flush=True)
     api("/api/broadcast/stop", "POST")
     assert api("/api/status")["state"] == "idle"
     print("PASS: stop returns the engine to idle", flush=True)

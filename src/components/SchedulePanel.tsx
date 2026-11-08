@@ -57,12 +57,30 @@ export default function SchedulePanel({ onQueue }: { onQueue: () => void }) {
     };
   }, [connected]);
   const active = status?.state === "live" || status?.state === "starting";
-  const start =
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const scheduledStart =
     editing || !schedule
-      ? new Date(draft).getTime()
+      ? draft
+        ? new Date(draft).getTime()
+        : now
       : new Date(schedule.startAt).getTime();
   const offsets = queueOffsets(queue),
     total = queue.reduce((n, v) => n + v.durationSeconds, 0);
+  const liveIndex = queue.findIndex(
+    (item, index) =>
+      item.id === status?.currentMediaId &&
+      queue.slice(0, index).filter((previous) => previous.id === item.id)
+        .length === (status.currentOccurrence ?? 0),
+  );
+  const liveStart =
+    status?.currentStartedAt && liveIndex >= 0
+      ? Date.parse(status.currentStartedAt) - offsets[liveIndex] * 1000
+      : now;
+  const start = !schedule && !editing && active ? liveStart : scheduledStart;
   async function save(e: SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (pending.current) return;
@@ -234,7 +252,8 @@ export default function SchedulePanel({ onQueue }: { onQueue: () => void }) {
         <div className="panel-heading">
           <div className="section-title">
             <h2>
-              <Clock3 size={18} /> Scheduled rundown
+              <Clock3 size={18} />{" "}
+              {active && !schedule ? "Live rundown" : "Scheduled rundown"}
             </h2>
             <span>
               {queue.length} programs · {duration(total)} per run
@@ -247,7 +266,10 @@ export default function SchedulePanel({ onQueue }: { onQueue: () => void }) {
         <div className="schedule-preview">
           {queue.length ? (
             queue.map((item, i) => (
-              <div className="schedule-program" key={`${item.id}-${i}`}>
+              <div
+                className={`schedule-program ${active && !schedule && i === liveIndex ? "program-playing" : ""}`}
+                key={`${item.id}-${i}`}
+              >
                 <span className="mono">
                   {Number.isFinite(start)
                     ? new Date(start + offsets[i] * 1000).toLocaleString(
@@ -262,7 +284,12 @@ export default function SchedulePanel({ onQueue }: { onQueue: () => void }) {
                       )
                     : `+${duration(offsets[i])}`}
                 </span>
-                <strong>{item.title}</strong>
+                <strong>
+                  {active && !schedule && i === liveIndex && (
+                    <span className="on-air-label">ON AIR </span>
+                  )}
+                  {item.title}
+                </strong>
                 <span className="mono">{duration(item.durationSeconds)}</span>
               </div>
             ))

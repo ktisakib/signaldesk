@@ -1,5 +1,7 @@
-Run the Windows x64 installer as your normal Windows user. The setup file includes the broadcast engine, FFmpeg, FFprobe, MediaMTX and the WebView2 offline installer. Setup no longer waits for internet downloads. If an older setup is still running, close it before installing.
+SignalDesk 0.1.4 adds live queue editing, current-program and elapsed-time indicators, clock-time rundowns, batch video imports and signed desktop updates.
 
-Use your existing relay connection profile. Before upgrading an active studio, stop the broadcast and exit the desktop app and its background engine. The installer is unsigned.
+Queue changes prepare in the background and apply at the next available program boundary. The current clip finishes. Already buffered media can still play before a late edit takes effect. Keep source media available on the laptop.
 
-The matching FFmpeg and library sources are listed in the release asset MEDIA-SOURCES.txt and in the installed runtime/licenses/media folder. See the [deployment guide](https://github.com/ktisakib/signaldesk/blob/main/docs/deployment.md) for connecting your laptop.
+Install this release manually once when upgrading from v0.1.3. Future signed updates are offered inside the desktop app. Stop broadcasting before selecting Install update. The offline Windows installer includes the media runtime and WebView2.
+
+The Windows executable is unsigned by Authenticode. See the setup guide for broadcaster connection profiles and operating instructions.

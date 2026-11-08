@@ -156,14 +156,14 @@ For prerecorded shows, stop the test signal, arrange the queue and start **Go li
 
 ## 7. Edit the running order with drag and drop
 
-1. Stop local playout before editing the queue. The UI and API lock queue mutation during a broadcast.
+1. You can edit the queue during playout. New media prepares in the background. The encoder keeps running and applies the prepared lineup at the next available program boundary. A clip already buffered by the encoder may still play. The current show finishes even if removed from the queue.
 2. In **Media library**, use **Queue** to add a program. Repeated programs are allowed.
 3. Open **Playout queue**. Drag a row's grip handle to a new position. Dragging is confined to the handle so normal scrolling and buttons remain usable.
 4. For keyboard operation, focus its grip, press Space/Enter, move with arrows, then press Space/Enter to drop. Escape cancels.
 5. Alternatively use the up/down buttons. Remove affects only that queue occurrence.
-6. Wait for the saved confirmation. The relative timeline, duration offsets and scheduled preview follow the saved running order. Failed saves show an error and roll back the optimistic order.
+6. Wait for the saved confirmation. The rundown shows local clock estimates and highlights the current program with elapsed time. The scheduled preview follows the saved running order. Failed saves show an error and roll back the optimistic order.
 
-Library import remains available during playout; removing library records is locked because it can affect the queued lineup. A removed library record never deletes the original file, but it removes queue references to that record.
+Library import remains available during playout; removing library records remains locked while broadcasting. A removed library record never deletes the original file, but it removes queue references to that record.
 
 ## 8. Schedule and reschedule
 
@@ -312,3 +312,12 @@ Do not include `.env.relay`, publishing keys, YouTube keys or an expanded Compos
 - A real Windows installation, camera permission flow, clock behavior, sustained audience load and host restart are verified on the client's actual hardware.
 
 Local automated checks and development-machine tests are documented in the README. They do not replace the last hardware/network acceptance step or establish public-internet capacity.
+
+
+## Desktop updates
+
+Windows v0.1.4 introduces signed updates using the official Tauri v2 updater. Install this release manually once when upgrading from v0.1.3. The desktop checks on startup and every six hours. You can also choose **Check for updates**. **Install update** downloads and verifies the signed installer, then closes the idle engine before replacing files. Stop broadcasting before installation. The app checks the engine again after downloading and refuses to replace an active broadcaster. Restart the studio after a failed installation before resuming playout.
+
+GitHub Actions holds the private signing key. The public key is embedded in the app. Keep the private key backup in the administrator’s private release directory and preserve it across future releases. This updater signature is separate from Windows Authenticode signing.
+
+The library accepts multiple files through its drop zone and file picker. Desktop drops register local paths. Browser uploads copy each file into storage, with a 2 GiB limit per file. Individual import failures are reported while the rest of the batch continues.

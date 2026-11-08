@@ -44,6 +44,9 @@ jobs:
           install: mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-binutils
       - name: Build installer with standalone service
         shell: powershell
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
         run: ./scripts/build-windows.ps1 -MsysRoot "${{ steps.msys.outputs.msys2-location }}"
       - name: Install from a single executable with media downloads blocked
         shell: powershell
@@ -102,5 +105,10 @@ jobs:
             gh release create $env:GITHUB_REF_NAME --title "SignalDesk $version" --notes-file docs/release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Release creation failed.' }
           }
+          $signature = Get-Content "$($installer.FullName).sig" -Raw
+          $manifest = @{ version = $version; notes = 'SignalDesk desktop update'; pub_date = [DateTime]::UtcNow.ToString('o'); platforms = @{ 'windows-x86_64' = @{ signature = $signature.Trim(); url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:GITHUB_REF_NAME/$($installer.Name)" } } } | ConvertTo-Json -Depth 5
+          $manifest | Set-Content target/release/bundle/nsis/latest.json -Encoding utf8NoBOM
+          gh release upload $env:GITHUB_REF_NAME "$($installer.FullName).sig" target/release/bundle/nsis/latest.json --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Updater artifact upload failed.' }
           gh release upload $env:GITHUB_REF_NAME src-tauri/runtime/licenses/media/MEDIA-SOURCES.txt $installer.FullName target/release/bundle/nsis/SHA256SUMS.txt --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed.' }
