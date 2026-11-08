@@ -31,7 +31,7 @@ One relay IP serves multiple channels. Each broadcaster gets a channel ID and pu
 | Desktop studio | Installable Tauri UI with a separate background Rust engine; native file picker |
 | Docker studio | Same browser dashboard and engine, with FFmpeg/FFprobe/MediaMTX included |
 | Media library | Local file registration, validated Docker/browser uploads, search and removal of library entries |
-| Running order | Drag handles, keyboard sorting, up/down controls, removal, duplicate programs, saved order and relative timeline |
+| Running order | Drag handles, keyboard sorting, up/down controls, removal, duplicate programs, live edits, clock-time estimates and current-program indicators |
 | Scheduling | One pending queue start; create, reschedule, discard edits, cancel, and estimated show start times in the displayed local timezone |
 | Live production | Camera/microphone preview, live takeover, mute and optional return to queue |
 | Broadcast graphics | Animated lower thirds, editable breaking-news/advertisement banner, continuous ticker, corner logo and live updates; see [graphics guide](docs/broadcast-graphics.md) |
@@ -159,7 +159,7 @@ Use the relay directory's **Watch channel** button for browser playback. A secon
 6. To change it, choose **Reschedule → Save new time**. **Discard changes** preserves the saved time.
 7. **Cancel scheduled start** removes the pending start without deleting the lineup or stopping current playout.
 
-Scheduling starts the current saved queue once. Reordering the queue changes that scheduled lineup. Queue changes and library removal are blocked while a broadcast is running; import can still add new library files. Stop playout before editing the active running order.
+Scheduling starts the current saved queue once. Reordering the queue changes that scheduled lineup. Queue edits remain available while broadcasting. New entries prepare in the background and take effect at the next available program boundary. Already buffered clips can still play before a late change applies. Library removal is locked during a broadcast. Multiple videos can be dropped into Media library, or selected together through its file picker.
 
 Keep the laptop awake and engine running. Enable relay output before the scheduled start. The scheduler does not interrupt an active program; it reports that start as skipped. Starts more than 60 seconds overdue are marked missed. A reboot preserves the queue/schedule but does not automatically resume old playout or re-enable relay output. Camera capture needs its window open; prerecorded playout can continue after the dashboard closes.
 
@@ -200,6 +200,10 @@ Stop native playout or give it different local media ports before running Docker
 | `.env.relay` | Private relay admin and callback tokens |
 
 Output keys are saved locally and must be treated as credentials. Back up local databases and original videos separately. Stop services before copying SQLite databases; include journal/WAL files if present. Never use `docker compose down --volumes` as a normal stop/update command because it deletes persistent data.
+
+## Desktop auto-updates
+
+Windows v0.1.4 adds automatic checks at startup and every six hours through Tauri’s signed updater. Install v0.1.4 manually once when upgrading from v0.1.3. Select **Install update** while broadcasting is stopped. The downloaded installer is signature-verified, the idle engine shuts down, and the studio restarts. Keep the private updater signing key backed up. See [Windows packaging](docs/windows.md) and [Tauri updater documentation](https://v2.tauri.app/plugin/updater/).
 
 ## Operations and updates
 
