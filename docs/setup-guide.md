@@ -156,7 +156,7 @@ For prerecorded shows, stop the test signal, arrange the queue and start **Go li
 
 ## 7. Edit the running order with drag and drop
 
-1. You can edit the queue during playout. New media prepares in the background. The encoder keeps running and applies the prepared lineup at the next available program boundary. A clip already buffered by the encoder may still play. The current show finishes even if removed from the queue.
+1. You can edit the queue during playout. New media prepares in the background. The encoder keeps running and applies the prepared lineup at the next available program boundary. A clip already buffered by the encoder may still play. The current show finishes even if removed from the queue. If the current occurrence is removed, selection resumes at the first entry of the edited lineup after buffered clips finish.
 2. In **Media library**, use **Queue** to add a program. Repeated programs are allowed.
 3. Open **Playout queue**. Drag a row's grip handle to a new position. Dragging is confined to the handle so normal scrolling and buttons remain usable.
 4. For keyboard operation, focus its grip, press Space/Enter, move with arrows, then press Space/Enter to drop. Escape cancels.
