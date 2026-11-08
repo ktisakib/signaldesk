@@ -203,7 +203,7 @@ Output keys are saved locally and must be treated as credentials. Back up local 
 
 ## Desktop auto-updates
 
-Windows v0.1.5 adds automatic checks at startup and every six hours through Tauri’s signed updater. Install v0.1.5 manually once when upgrading from v0.1.3. Select **Install update** while broadcasting is stopped. The downloaded installer is signature-verified, the idle engine shuts down, and the studio restarts. Keep the private updater signing key backed up. See [Windows packaging](docs/windows.md) and [Tauri updater documentation](https://v2.tauri.app/plugin/updater/).
+Windows v0.1.6 adds automatic checks at startup and every six hours through Tauri’s signed updater. Install v0.1.6 manually once when upgrading from v0.1.3. Select **Install update** while broadcasting is stopped. The downloaded installer is signature-verified, the idle engine shuts down, and the studio restarts. Keep the private updater signing key backed up. See [Windows packaging](docs/windows.md) and [Tauri updater documentation](https://v2.tauri.app/plugin/updater/).
 
 ## Operations and updates
 

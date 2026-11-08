@@ -201,6 +201,7 @@ async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
     let client = reqwest::Client::new();
     let response = client
         .post(format!("{SERVICE_URL}/api/system/shutdown"))
+        .json(&serde_json::json!({}))
         .send()
         .await
         .map_err(|e| e.to_string())?;

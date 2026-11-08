@@ -98,4 +98,4 @@ For a source build, `scripts/start-service.ps1` redirects startup output to `ser
 
 The release pipeline keeps updater signing credentials in GitHub Actions secrets. The installed application contains only the public key. The signing key is required to generate updater artifacts from a local release build. Desktop development with `npm run desktop` uses the normal development workflow.
 
-Windows v0.1.3 requires a one-time manual upgrade to v0.1.5 to gain in-app updates. The update installer runs only after the local broadcaster has stopped and its engine has shut down. The release's `latest.json` contains the Windows installer URL and its signature. [Tauri updater reference](https://v2.tauri.app/plugin/updater/)
+Windows v0.1.3 requires a one-time manual upgrade to v0.1.6 to gain in-app updates. The update installer runs only after the local broadcaster has stopped and its engine has shut down. The release's `latest.json` contains the Windows installer URL and its signature. [Tauri updater reference](https://v2.tauri.app/plugin/updater/)

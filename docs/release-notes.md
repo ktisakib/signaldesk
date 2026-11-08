@@ -1,4 +1,4 @@
-SignalDesk 0.1.5 adds live queue editing, current-program and elapsed-time indicators, clock-time rundowns, batch video imports and signed desktop updates.
+SignalDesk 0.1.6 adds live queue editing, current-program and elapsed-time indicators, clock-time rundowns, batch video imports and signed desktop updates.
 
 Queue changes prepare in the background and apply at the next available program boundary. The current clip finishes. Already buffered media can still play before a late edit takes effect. Keep source media available on the laptop.
 

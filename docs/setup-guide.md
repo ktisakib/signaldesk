@@ -316,7 +316,7 @@ Local automated checks and development-machine tests are documented in the READM
 
 ## Desktop updates
 
-Windows v0.1.5 introduces signed updates using the official Tauri v2 updater. Install this release manually once when upgrading from v0.1.3. The desktop checks on startup and every six hours. You can also choose **Check for updates**. **Install update** downloads and verifies the signed installer, then closes the idle engine before replacing files. Stop broadcasting before installation. The app checks the engine again after downloading and refuses to replace an active broadcaster. Restart the studio after a failed installation before resuming playout.
+Windows v0.1.6 introduces signed updates using the official Tauri v2 updater. Install this release manually once when upgrading from v0.1.3. The desktop checks on startup and every six hours. You can also choose **Check for updates**. **Install update** downloads and verifies the signed installer, then closes the idle engine before replacing files. Stop broadcasting before installation. The app checks the engine again after downloading and refuses to replace an active broadcaster. Restart the studio after a failed installation before resuming playout.
 
 GitHub Actions holds the private signing key. The public key is embedded in the app. Keep the private key backup in the administrator’s private release directory and preserve it across future releases. This updater signature is separate from Windows Authenticode signing.
 
