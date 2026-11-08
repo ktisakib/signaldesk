@@ -36,12 +36,11 @@ jobs:
           $installer = (Get-ChildItem *.exe).FullName
           $destination = Join-Path $env:LOCALAPPDATA 'SignalDesk'
           if (Test-Path $destination) { throw 'Expected a fresh Windows profile' }
-          $adapters = @(Get-NetAdapter | Where-Object Status -eq Up | Select-Object -ExpandProperty Name)
-          if (!$adapters.Count) { throw 'No active network adapter to isolate' }
+          $external = @('0.0.0.0-126.255.255.255', '128.0.0.0-255.255.255.255', '::2-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff')
           $probe = @('--noproxy', '*', '--silent', '--max-time', '5', '--head', '--output', 'NUL', 'https://github.com')
           curl.exe @probe
           if ($LASTEXITCODE) { throw 'Internet probe failed before isolation' }
-          $rule = New-NetFirewallRule -DisplayName 'SignalDesk clean offline test' -Direction Outbound -InterfaceAlias $adapters -Profile Any -Action Block
+          $rule = New-NetFirewallRule -DisplayName 'SignalDesk clean offline test' -Direction Outbound -RemoteAddress $external -Profile Any -Action Block
           try {
             curl.exe @probe
             if (!$LASTEXITCODE) { throw 'Internet is still reachable' }
