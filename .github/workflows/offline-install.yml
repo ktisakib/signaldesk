@@ -78,13 +78,13 @@ jobs:
             $frames = $progress | Select-String '^frame=(\d+)$' | Select-Object -Last 1
             if ($decodeExit -or !$frames -or [int]$frames.Matches[0].Groups[1].Value -lt 125 -or !($progress -contains 'progress=end')) { throw "Could not decode five seconds of test video: $progress" }
             Write-Host 'PASS: installed desktop started and its live HLS test signal decoded for five seconds offline'
-            $null = Invoke-RestMethod "$api/broadcast/stop" -Method Post -NoProxy
+            $null = Invoke-RestMethod "$api/broadcast/stop" -Method Post -ContentType 'application/json' -Body '{}' -NoProxy
             $clip = Join-Path $env:RUNNER_TEMP 'offline upgrade sample.mp4'
             & "$destination/runtime/bin/ffmpeg.exe" -v error -y -f lavfi -i 'color=blue:size=320x240:duration=1' -c:v libx264 $clip
             if ($LASTEXITCODE) { throw 'Could not create upgrade sample' }
             $media = Invoke-RestMethod "$api/library" -Method Post -ContentType 'application/json' -Body (@{ path = $clip } | ConvertTo-Json) -NoProxy
             $null = Invoke-RestMethod "$api/queue" -Method Put -ContentType 'application/json' -Body (@{ ids = @($media.id) } | ConvertTo-Json) -NoProxy
-            $null = Invoke-RestMethod "$api/system/shutdown" -Method Post -NoProxy
+            $null = Invoke-RestMethod "$api/system/shutdown" -Method Post -ContentType 'application/json' -Body '{}' -NoProxy
             Get-Process $studio.BaseName -ErrorAction SilentlyContinue | Stop-Process -Force
             Start-Sleep -Seconds 2
             $sentinel = Join-Path $destination 'operator-data-sentinel.txt'
