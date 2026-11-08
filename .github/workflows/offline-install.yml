@@ -78,6 +78,33 @@ jobs:
             $frames = $progress | Select-String '^frame=(\d+)$' | Select-Object -Last 1
             if ($decodeExit -or !$frames -or [int]$frames.Matches[0].Groups[1].Value -lt 125 -or !($progress -contains 'progress=end')) { throw "Could not decode five seconds of test video: $progress" }
             Write-Host 'PASS: installed desktop started and its live HLS test signal decoded for five seconds offline'
+            $null = Invoke-RestMethod "$api/broadcast/stop" -Method Post -NoProxy
+            $clip = Join-Path $env:RUNNER_TEMP 'offline upgrade sample.mp4'
+            & "$destination/runtime/bin/ffmpeg.exe" -v error -y -f lavfi -i 'color=blue:size=320x240:duration=1' -c:v libx264 $clip
+            if ($LASTEXITCODE) { throw 'Could not create upgrade sample' }
+            $media = Invoke-RestMethod "$api/library" -Method Post -ContentType 'application/json' -Body (@{ path = $clip } | ConvertTo-Json) -NoProxy
+            $null = Invoke-RestMethod "$api/queue" -Method Put -ContentType 'application/json' -Body (@{ ids = @($media.id) } | ConvertTo-Json) -NoProxy
+            $null = Invoke-RestMethod "$api/system/shutdown" -Method Post -NoProxy
+            Get-Process $studio.BaseName -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep -Seconds 2
+            $sentinel = Join-Path $destination 'operator-data-sentinel.txt'
+            'preserve operator data' | Set-Content $sentinel
+            $p = Start-Process $installer -ArgumentList @('/S', '/UPDATE') -PassThru
+            if (!$p.WaitForExit(150000) -or $p.ExitCode -ne 0) { throw 'Offline reinstall failed' }
+            if ((Get-Content $sentinel -Raw).Trim() -ne 'preserve operator data') { throw 'Operator file was removed' }
+            Start-Process -FilePath $studio.FullName
+            $restored = $false
+            foreach ($i in 1..40) {
+              try {
+                $queue = @(Invoke-RestMethod "$api/queue" -TimeoutSec 2 -NoProxy)
+                $restored = $queue.Count -eq 1 -and $queue[0].id -eq $media.id
+              } catch {}
+              if ($restored) { break }
+              Start-Sleep -Milliseconds 500
+            }
+            if (!$restored) { throw 'Saved queue did not survive reinstall' }
+            Write-Host 'PASS: offline installer update mode preserved the database, saved queue and operator files'
+
           } finally {
             $rule | Remove-NetFirewallRule
           }
