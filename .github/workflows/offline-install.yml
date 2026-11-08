@@ -67,7 +67,12 @@ jobs:
               if ($playlist) { break }
               Start-Sleep -Seconds 1
             }
-            if (!$playlist) { throw 'HLS test signal did not appear' }
+            if (!$playlist) {
+              Invoke-RestMethod "$api/status" -NoProxy | ConvertTo-Json -Depth 5
+              Get-NetTCPConnection -State Listen -LocalPort 8888,8554 -ErrorAction SilentlyContinue | Format-Table
+              Write-Host "Last playlist response ($LASTEXITCODE): $manifest"
+              throw 'HLS test signal did not appear'
+            }
             $progress = & "$destination/runtime/bin/ffmpeg.exe" -nostdin -v error -xerror -rw_timeout 10000000 -i $url -t 5 -map 0:v:0 -f null - -progress pipe:1
             $decodeExit = $LASTEXITCODE
             $frames = $progress | Select-String '^frame=(\d+)$' | Select-Object -Last 1
