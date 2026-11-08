@@ -1,0 +1,76 @@
+name: Verify published Windows installer offline
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  offline:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - name: Fetch the released installer and verify SHA-256
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ($env:TAG -notmatch '^v\d+\.\d+\.\d+$') { throw 'Expected a version tag' }
+          gh release download $env:TAG -R $env:GITHUB_REPOSITORY -p '*.exe' -p SHA256SUMS.txt
+          if ($LASTEXITCODE) { throw 'Release download failed' }
+          $exe = @(Get-ChildItem *.exe)
+          if ($exe.Count -ne 1) { throw 'Expected one installer' }
+          $digest = (Get-FileHash $exe[0] -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ((Get-Content SHA256SUMS.txt -Raw).Trim() -cne "$digest  $($exe[0].Name)") { throw 'Checksum mismatch' }
+          Write-Host "Verified $($exe[0].Name) SHA-256 $digest"
+      - name: Install and decode the test signal with all network adapters blocked
+        shell: pwsh
+        timeout-minutes: 6
+        run: |
+          $installer = (Get-ChildItem *.exe).FullName
+          $destination = Join-Path $env:LOCALAPPDATA 'SignalDesk'
+          if (Test-Path $destination) { throw 'Expected a fresh Windows profile' }
+          $adapters = @(Get-NetAdapter | Where-Object Status -eq Up | Select-Object -ExpandProperty Name)
+          if (!$adapters.Count) { throw 'No active network adapter to isolate' }
+          $probe = @('--noproxy', '*', '--silent', '--max-time', '5', '--head', '--output', 'NUL', 'https://github.com')
+          curl.exe @probe
+          if ($LASTEXITCODE) { throw 'Internet probe failed before isolation' }
+          $rule = New-NetFirewallRule -DisplayName 'SignalDesk clean offline test' -Direction Outbound -InterfaceAlias $adapters -Profile Any -Action Block
+          try {
+            curl.exe @probe
+            if (!$LASTEXITCODE) { throw 'Internet is still reachable' }
+            Write-Host 'Verified external access is blocked'
+            $p = Start-Process $installer -ArgumentList '/S' -PassThru
+            if (!$p.WaitForExit(150000) -or $p.ExitCode -ne 0) { throw 'Offline install failed or timed out' }
+            Write-Host 'Clean offline install passed'
+            $studio = Get-ChildItem $destination -Filter '*.exe' | Where-Object Name -ne 'uninstall.exe' | Select-Object -First 1
+            Start-Process -FilePath $studio.FullName
+            $api = 'http://127.0.0.1:9780/api'
+            $ready = $false
+            foreach ($i in 1..40) {
+              try { $ready = (Invoke-RestMethod "$api/health" -TimeoutSec 2 -NoProxy).service -eq 'signaldesk' } catch {}
+              if ($ready) { break }
+              Start-Sleep -Milliseconds 500
+            }
+            if (!$ready) { throw 'Desktop app did not start its installed engine' }
+            $null = Invoke-RestMethod "$api/broadcast/start" -Method Post -ContentType 'application/json' -Body '{"source":"test"}' -NoProxy
+            $url = 'http://127.0.0.1:8888/live/index.m3u8'
+            $playlist = $false
+            foreach ($i in 1..30) {
+              try { $playlist = (Invoke-WebRequest $url -NoProxy -TimeoutSec 2).Content -match '#EXTM3U' } catch {}
+              if ($playlist) { break }
+              Start-Sleep -Seconds 1
+            }
+            if (!$playlist) { throw 'HLS test signal did not appear' }
+            $progress = & "$destination/runtime/bin/ffmpeg.exe" -nostdin -v error -xerror -rw_timeout 10000000 -i $url -t 5 -map 0:v:0 -f null - -progress pipe:1
+            if ($LASTEXITCODE -or !($progress -match '^out_time_us=([5-9]\d{6}|\d{8,})$') -or !($progress -match '^progress=end$')) { throw "Could not decode five seconds of test video: $progress" }
+            Write-Host 'PASS: installed desktop started and its live HLS test signal decoded for five seconds offline'
+          } finally {
+            $rule | Remove-NetFirewallRule
+          }
