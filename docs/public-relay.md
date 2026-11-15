@@ -57,7 +57,7 @@ Public endpoint settings determine downloaded profiles. Changing them does not a
 | Control | Enforcement |
 | --- | --- |
 | Enabled | Disabled channels reject HLS playback and SRT authentication. The active publisher is disconnected. |
-| Maximum HLS sessions | MediaMTX limits simultaneous player sessions per path. A session can differ from a person, device or HTTP connection. Lower limits apply to new sessions. |
+| Maximum HLS sessions | MediaMTX limits simultaneous player sessions per path. A session can differ from a person, device or HTTP connection. Changing this limit reconnects the path and its publisher. Enabled SignalDesk outputs retry automatically. |
 | Aggregate HLS output Mbps | The relay paces response-body bytes across all simultaneous requests for that channel. Both LAN and public playback pass through this proxy. |
 | Maximum publisher bitrate Mbps | Incoming media bytes are sampled every five seconds. Over-limit publishers are disconnected and checked again if they reconnect. |
 | Publishing key | A private per-channel encrypted SRT credential. Rotation disconnects the previous publisher. |

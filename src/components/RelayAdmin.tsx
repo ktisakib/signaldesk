@@ -150,7 +150,7 @@ export default function RelayAdmin() {
           policy,
         });
         setNotice(
-          "Channel settings saved. Publisher bitrate is checked every five seconds.",
+          "Channel settings saved. Session-limit changes reconnect the publisher. Bitrate is checked every five seconds.",
         );
       } else {
         setSecret(
@@ -539,7 +539,7 @@ export default function RelayAdmin() {
               <p className="form-hint">
                 Output bandwidth is shared by every viewer. Allow headroom for
                 audio and transport. A publisher exceeding its measured limit is
-                disconnected. Lower session limits apply to new viewers.
+                disconnected. Changing session limits reconnects the publisher.
               </p>
               <label>
                 <input

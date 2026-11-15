@@ -218,20 +218,29 @@ pub(super) async fn update(
         .map_err(|_| failure())?
         .ok_or((StatusCode::NOT_FOUND, "Channel not found"))?;
     let old = policy(&app, &id).await?;
-    // MediaMTX applies path patches without closing an existing publisher.
-    if body.policy.enabled {
-        let endpoint = if old.enabled {
-            format!("{}/v3/config/paths/patch/streams/{id}", app.media)
-        } else {
-            format!("{}/v3/config/paths/add/streams/{id}", app.media)
-        };
-        let method = if old.enabled {
-            reqwest::Method::PATCH
-        } else {
-            reqwest::Method::POST
-        };
-        app.client.request(method,endpoint).json(&json!({"source":"publisher","overridePublisher":false,"record":false,"srtPublishPassphrase":secret,"maxReaders":body.policy.max_readers})).send().await.map_err(|_|failure())?.error_for_status().map_err(|_|failure())?;
-    } else {
+    // MediaMTX restarts a path when maxReaders changes; metadata and bandwidth edits stay live.
+    if body.policy.enabled && !old.enabled {
+        app.client
+            .post(format!("{}/v3/config/paths/add/streams/{id}", app.media))
+            .json(
+                &json!({"source":"publisher","overridePublisher":false,"record":false,
+                "srtPublishPassphrase":secret,"maxReaders":body.policy.max_readers}),
+            )
+            .send()
+            .await
+            .map_err(|_| failure())?
+            .error_for_status()
+            .map_err(|_| failure())?;
+    } else if body.policy.enabled && old.max_readers != body.policy.max_readers {
+        app.client
+            .patch(format!("{}/v3/config/paths/patch/streams/{id}", app.media))
+            .json(&json!({"maxReaders":body.policy.max_readers}))
+            .send()
+            .await
+            .map_err(|_| failure())?
+            .error_for_status()
+            .map_err(|_| failure())?;
+    } else if !body.policy.enabled && old.enabled {
         remove_media(&app, &id).await?;
     }
     if sqlx::query("UPDATE channels SET name=?,policy=? WHERE id=?")

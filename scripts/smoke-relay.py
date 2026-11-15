@@ -120,6 +120,7 @@ try:
         policy.update(domain='qa-channel.example.com', maxReaders=1)
         api(BASE,f"/api/channels/{c['id']}",'PUT',{'name':record['name'],'policy':policy},admin=True)
         api(BASE,f"/api/channels/{channels[0]['id']}",'PUT',{'name':'Conflicting','policy':policy},admin=True,expected=409)
+        wait(online,35)
         def media_api(path,method='GET'):
             command=['docker','exec',containers[0],'curl','-fsS','-X',method,'http://mediamtx:9997'+path]
             raw=subprocess.check_output(command,text=True)
