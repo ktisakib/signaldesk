@@ -72,6 +72,8 @@ Use a phone on mobile data to open the public domain. Tests from the same Wi-Fi 
 
 Start the laptop's queue and enable relay output. Confirm LIVE in the directory and play its .m3u8 URL in VLC or **Watch channel**. Check actual video and audio. Keep the laptop and relay awake.
 
+For an outside-LAN playback check, run the **Verify public HLS playback** GitHub Actions workflow with the ID of a live channel. It validates HTTPS and decodes eight seconds of video and audio from tv.pressmos.com. It needs no administrator token, publishing key or GitHub secret. Publishing still happens from the broadcaster on the LAN; this workflow does not test public SRT ingress. This check passed on November 15, 2026, using a disposable test channel that was removed afterward.
+
 If publishing fails, check UDP forwarding, enabled state, credentials and publisher bitrate. If HTTPS fails, check DNS A/AAAA, TCP forwarding and gateway logs. A saved domain remains pending until DNS and routing permit certificate issuance.
 
 If the public address shows your router login or a certificate for `tplinkwifi.net`, move or disable WAN remote administration on TCP 80/443 and correct the forwarding rules above. Never enter the relay administrator token into that router page. Let's Encrypt must reach Caddy on the relay, rather than the router's web interface.
