@@ -1,0 +1,37 @@
+name: Verify public HLS playback
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Live public channel ID (no publishing credentials required)
+        type: string
+        required: true
+        default: deployment-verify
+
+permissions: {}
+
+jobs:
+  playback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Install decoder
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Verify HTTPS and decode public video and audio
+        env:
+          CHANNEL: ${{ inputs.channel }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CHANNEL" =~ ^[a-z0-9][a-z0-9-]{0,47}$ ]]
+          url="https://tv.pressmos.com/streams/$CHANNEL/index.m3u8"
+          curl --fail --silent --show-error --max-time 30 "$url" -o /tmp/public.m3u8
+          grep -qx '#EXTM3U' /tmp/public.m3u8
+          timeout 90 ffmpeg -nostdin -v error -xerror -rw_timeout 15000000 \
+            -tls_verify 1 -ca_file /etc/ssl/certs/ca-certificates.crt \
+            -i "$url" -t 8 -map 0:v:0 -map 0:a:0 -f null - -progress pipe:1 | tee /tmp/decode.txt
+          grep -qx 'progress=end' /tmp/decode.txt
+          awk -F= '/^frame=/{frames=$2} END {exit !(frames>0)}' /tmp/decode.txt
+          echo 'PASS: trusted public HTTPS and eight seconds of HLS video/audio decoded outside the LAN'
