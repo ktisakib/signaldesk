@@ -12,5 +12,5 @@ with os.fdopen(fd, 'w') as f:
     f.write('# LAN test only. Keep private; do not commit or publish this file.\n')
     for name in ['RELAY_ADMIN_TOKEN', 'RELAY_HOOK_TOKEN']:
         f.write(f'{name}={secrets.token_hex(32)}\n')
-    f.write('RELAY_HTTP_PORT=8088\nRELAY_SRT_PORT=8890\n')
+    f.write('RELAY_HTTP_PORT=18088\nRELAY_SRT_PORT=8890\n')
 print('Created .env.relay. Copy RELAY_ADMIN_TOKEN locally into the relay dashboard; never share it with broadcasters.')

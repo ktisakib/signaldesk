@@ -1,5 +1,7 @@
 # SignalDesk
 
+Public hosting at **tv.pressmos.com** on **103.140.205.192**, dynamic channel domains, HTTPS and per-channel limits are covered in [Public relay deployment](docs/public-relay.md).
+
 SignalDesk is a desktop and Docker-based broadcasting studio with a shared IPTV relay. Broadcasters manage their own videos, running order, scheduled starts and live cameras on their laptops. Each laptop sends one encrypted SRT stream to a Docker relay, which distributes independent HLS channels to browsers and IPTV players.
 
 **Deploy from prebuilt releases:** [Windows installer](https://github.com/ktisakib/signaldesk/releases/latest) · [VPS / Windows deployment guide](docs/deployment.md). The configured LAN relay target is `192.168.0.248:18088`, with SRT on UDP `8890`. Images are published to `ghcr.io/ktisakib/signaldesk-relay` and `ghcr.io/ktisakib/signaldesk-studio` after streaming checks pass. The Windows installer includes the media tools and WebView2; laptops can import a private connection profile from the relay administrator.

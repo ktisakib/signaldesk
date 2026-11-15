@@ -4,7 +4,13 @@ set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$ROOT"
 test -f .env.relay || { echo 'Run python3 scripts/setup-relay.py first.' >&2; exit 1; }
-compose() { docker compose --env-file .env.relay -f compose.relay.yaml "$@"; }
+compose() {
+    if [ "$(sed -n 's/^RELAY_PUBLIC_ENABLED=//p' .env.relay)" = true ]; then
+        docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml "$@"
+    else
+        docker compose --env-file .env.relay -f compose.relay.yaml "$@"
+    fi
+}
 compose config --quiet
 previous=$(compose ps -q relay | xargs -r docker inspect --format '{{.Image}}')
 compose pull --quiet

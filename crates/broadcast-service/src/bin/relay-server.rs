@@ -11,6 +11,8 @@ use sqlx::{sqlite::SqliteConnectOptions, Row, SqlitePool};
 use std::{path::PathBuf, sync::Arc, time::Duration};
 use tokio::sync::Mutex;
 use tower_http::services::{ServeDir, ServeFile};
+#[path = "../relay_platform.rs"]
+mod platform;
 #[path = "../srt_auth.rs"]
 mod srt_auth;
 
@@ -20,8 +22,11 @@ struct App {
     admin: String,
     hook: String,
     media: String,
+    hls: String,
     client: reqwest::Client,
+    streaming: reqwest::Client,
     changes: Mutex<()>,
+    limits: platform::Limits,
 }
 fn denied() -> (StatusCode, &'static str) {
     (StatusCode::UNAUTHORIZED, "Authentication required")
@@ -40,6 +45,24 @@ fn equal(a: &str, b: &str) -> bool {
         == 0
 }
 fn authorize(app: &App, headers: &HeaderMap) -> Result<(), (StatusCode, &'static str)> {
+    let host = headers
+        .get("host")
+        .and_then(|h| h.to_str().ok())
+        .unwrap_or("")
+        .split(':')
+        .next()
+        .unwrap_or("");
+    let local = host == "localhost"
+        || host
+            .parse::<std::net::Ipv4Addr>()
+            .is_ok_and(|ip| ip.is_private() || ip.is_loopback());
+    if headers
+        .get("x-forwarded-proto")
+        .is_some_and(|p| p != "https")
+        && !local
+    {
+        return Err((StatusCode::FORBIDDEN, "Public administration requires HTTPS. Use the private LAN address to configure your domain."));
+    }
     let value = headers
         .get("authorization")
         .and_then(|v| v.to_str().ok())
@@ -65,9 +88,13 @@ fn key() -> String {
     )
 }
 async fn media_path(app: &App, id: &str, secret: &str) -> Result<(), (StatusCode, &'static str)> {
+    let policy = platform::policy(app, id).await?;
+    if !policy.enabled {
+        return Ok(());
+    }
     // Channel creation is explicit; publishers cannot create arbitrary paths.
     let url = format!("{}/v3/config/paths/add/streams/{id}", app.media);
-    app.client.post(url).json(&json!({"source":"publisher", "overridePublisher":false, "srtPublishPassphrase":secret,"record":false})).send().await.map_err(|_|failure())?.error_for_status().map_err(|_|failure())?;
+    app.client.post(url).json(&json!({"source":"publisher", "overridePublisher":false, "srtPublishPassphrase":secret,"record":false,"maxReaders":policy.max_readers})).send().await.map_err(|_|failure())?.error_for_status().map_err(|_|failure())?;
     Ok(())
 }
 async fn remove_media(app: &App, id: &str) -> Result<(), (StatusCode, &'static str)> {
@@ -84,7 +111,7 @@ async fn remove_media(app: &App, id: &str) -> Result<(), (StatusCode, &'static s
     }
 }
 async fn channels(State(app): State<Arc<App>>) -> Reply {
-    let rows = sqlx::query("SELECT id,name FROM channels ORDER BY id")
+    let rows = sqlx::query("SELECT id,name,policy FROM channels ORDER BY id")
         .fetch_all(&app.db)
         .await
         .map_err(|_| failure())?;
@@ -102,7 +129,7 @@ async fn channels(State(app): State<Arc<App>>) -> Reply {
     let entries:Vec<Value>=rows.iter().map(|r| {
         let id:String=r.get("id"); let path=format!("streams/{id}");
         let live=status["items"].as_array().and_then(|items|items.iter().find(|v|v["name"]==path));
-        json!({"id":id,"name":r.get::<String,_>("name"),"path":format!("/{path}/index.m3u8"),"online":live.is_some_and(|v|v["ready"]==true),"readers":live.and_then(|v|v["readers"].as_array()).map_or(0,Vec::len)})
+        json!({"id":id,"name":r.get::<String,_>("name"),"policy":platform::parse_policy(r.get::<String,_>("policy").as_str()),"path":format!("/{path}/index.m3u8"),"online":live.is_some_and(|v|v["ready"]==true),"readers":live.and_then(|v|v["readers"].as_array()).map_or(0,Vec::len)})
     }).collect();
     Ok(Json(json!({"channels":entries})))
 }
@@ -111,6 +138,8 @@ async fn channels(State(app): State<Arc<App>>) -> Reply {
 struct NewChannel {
     id: String,
     name: String,
+    #[serde(default)]
+    policy: platform::Policy,
 }
 async fn create(
     State(app): State<Arc<App>>,
@@ -138,18 +167,27 @@ async fn create(
     {
         return Err((StatusCode::CONFLICT, "Channel ID already exists"));
     }
+    body.policy.validate()?;
+    platform::ensure_domain_available(&app, &body.id, &body.policy.domain).await?;
     let secret = key();
-    media_path(&app, &body.id, &secret).await?;
-    if sqlx::query("INSERT INTO channels(id,name,secret) VALUES(?,?,?)")
+    if sqlx::query("INSERT INTO channels(id,name,secret,policy) VALUES(?,?,?,?)")
         .bind(&body.id)
         .bind(body.name.trim())
         .bind(&secret)
+        .bind(serde_json::to_string(&body.policy).map_err(|_| failure())?)
         .execute(&app.db)
         .await
         .is_err()
     {
         let _ = remove_media(&app, &body.id).await;
         return Err(failure());
+    }
+    if let Err(error) = media_path(&app, &body.id, &secret).await {
+        let _ = sqlx::query("DELETE FROM channels WHERE id=?")
+            .bind(&body.id)
+            .execute(&app.db)
+            .await;
+        return Err(error);
     }
     Ok(Json(json!({"id":body.id,"publishingKey":secret})))
 }
@@ -207,13 +245,16 @@ async fn auth(
     let Some(id) = body.path.strip_prefix("streams/").filter(|id| valid_id(id)) else {
         return StatusCode::UNAUTHORIZED;
     };
-    let row = sqlx::query("SELECT secret FROM channels WHERE id=?")
+    let row = sqlx::query("SELECT secret,policy FROM channels WHERE id=?")
         .bind(id)
         .fetch_optional(&app.db)
         .await;
     let Ok(Some(row)) = row else {
         return StatusCode::UNAUTHORIZED;
     };
+    if !platform::parse_policy(&row.get::<String, _>("policy")).enabled {
+        return StatusCode::FORBIDDEN;
+    }
     if body.action == "read" && body.protocol == "hls" {
         return StatusCode::NO_CONTENT;
     }
@@ -246,15 +287,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
     sqlx::query("CREATE TABLE IF NOT EXISTS channels(id TEXT PRIMARY KEY,name TEXT NOT NULL,secret TEXT NOT NULL)").execute(&db).await?;
+    platform::migrate(&db).await?;
     let app = Arc::new(App {
         db,
         admin,
         hook,
         media: std::env::var("RELAY_MEDIA_API").unwrap_or("http://mediamtx:9997".into()),
+        hls: std::env::var("RELAY_HLS_ORIGIN").unwrap_or("http://mediamtx:8888".into()),
         client: reqwest::Client::builder()
             .timeout(Duration::from_secs(5))
             .build()?,
+        streaming: reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(90))
+            .build()?,
         changes: Mutex::new(()),
+        limits: platform::Limits::default(),
     });
     // Wait for the media API before restoring persistent channel configuration.
     for _ in 0..30 {
@@ -312,6 +360,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     });
+    let monitor = Arc::clone(&app);
+    tokio::spawn(async move {
+        platform::monitor(monitor).await;
+    });
     let root = std::env::var("BROADCAST_WEB_ROOT").unwrap_or("/app/web".into());
     let public = Router::new()
         .route(
@@ -323,7 +375,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             get(|| async { Json(json!({"ok":true,"service":"signaldesk-relay"})) }),
         )
         .route("/api/channels", get(channels).post(create))
-        .route("/api/channels/{id}", axum::routing::delete(delete))
+        .route(
+            "/api/channels/{id}",
+            axum::routing::delete(delete).put(platform::update),
+        )
+        .route(
+            "/api/platform",
+            get(platform::settings).put(platform::save_settings),
+        )
+        .route("/api/admin/channels", get(platform::admin_channels))
+        .route("/streams/{id}/{*file}", get(platform::stream))
+        .route("/live/{*file}", get(platform::domain_stream))
         .route("/api/channels/{id}/rotate", post(rotate))
         .fallback_service(
             ServeDir::new(&root)
@@ -333,6 +395,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_state(Arc::clone(&app));
     // Authentication callback has no published port and is inaccessible through the gateway.
     let private = Router::new()
+        .route("/tls/allow", get(platform::allow_tls))
         .route("/auth/{token}", post(auth))
         .layer(axum::extract::DefaultBodyLimit::max(8192))
         .with_state(app);

@@ -74,6 +74,8 @@ jobs:
         run: |
           python scripts/setup-relay.py
           docker compose --env-file .env.relay -f compose.relay.yaml up --build -d --wait --wait-timeout 120
+          docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml config --quiet
+          docker run --rm -v "$PWD/docker/relay-public.Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.2-alpine caddy validate --config /etc/caddy/Caddyfile
           python scripts/smoke-relay.py
       - name: Publish verified relay and studio to GHCR
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

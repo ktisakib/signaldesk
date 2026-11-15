@@ -1,0 +1,14 @@
+# Use together with compose.relay.yaml. NAT forwards public 80/443 to these LAN ports.
+services:
+  gateway:
+    ports:
+      - '${RELAY_BIND_IP:-0.0.0.0}:${RELAY_TLS_HTTP_PORT:-80}:80'
+      - '${RELAY_BIND_IP:-0.0.0.0}:${RELAY_TLS_HTTPS_PORT:-443}:443'
+    volumes:
+      - ./docker/relay-public.Caddyfile:/etc/caddy/Caddyfile:ro
+      - relay-tls:/data
+      - relay-caddy-config:/config
+    tmpfs: !reset []
+volumes:
+  relay-tls:
+  relay-caddy-config:

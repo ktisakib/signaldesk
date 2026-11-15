@@ -104,3 +104,8 @@ The deployed v0.1.1 relay image was verified against digest `sha256:590ea2fe58f9
 The five-minute image update timer is enabled and its first run completed successfully. A consistent private channel-database snapshot and `.env.relay` backup are stored in `/var/backups/signaldesk/2026-11-07` on the server. Keep independent backups after channel/credential changes; this initial snapshot is not a recurring backup service. Original videos and schedules never went to the relay.
 
 Windows release v0.1.1 passed NSIS installation, automatic runtime setup, detached installed-engine health and real HLS/graphics/queue tests in GitHub Actions. Its first runtime-bootstrap install test failed; the second attempt passed. Installation requires internet and the executable is unsigned. The installer and SHA-256 checksum are published together in GitHub Releases.
+
+
+## Public relay and channel policies
+
+Use **103.140.205.192** for public publishing and **tv.pressmos.com** for the frontend. Follow [public relay deployment](public-relay.md) for Docker, DNS, forwarding, HTTPS and super-admin policies. The server LAN address remains **192.168.0.248**.

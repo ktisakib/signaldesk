@@ -114,6 +114,44 @@ try:
         wait(online,50)
         for c in channels:decode('/streams/'+c['id']+'/index.m3u8')
         print('PASS: media-server restart restores channels and both publishers reconnect')
+        c=channels[1]
+        record=next(x for x in api(BASE,'/api/channels')['channels'] if x['id']==c['id'])
+        policy=record['policy']
+        policy.update(domain='qa-channel.example.com', maxReaders=1)
+        api(BASE,f"/api/channels/{c['id']}",'PUT',{'name':record['name'],'policy':policy},admin=True)
+        api(BASE,f"/api/channels/{channels[0]['id']}",'PUT',{'name':'Conflicting','policy':policy},admin=True,expected=409)
+        def media_api(path,method='GET'):
+            command=['docker','exec',containers[0],'curl','-fsS','-X',method,'http://mediamtx:9997'+path]
+            raw=subprocess.check_output(command,text=True)
+            return json.loads(raw) if raw else None
+        sessions=media_api('/v3/hls/sessions/list')
+        for session in sessions['items']:
+            if session.get('path')=='streams/'+c['id']:
+                media_api('/v3/hls/sessions/kick/'+session['id'],'POST')
+        req=urllib.request.Request(BASE+'/live/index.m3u8',headers={'Host':'qa-channel.example.com'})
+        with urllib.request.urlopen(req,timeout=15) as r:
+            assert '#EXTM3U' in r.read().decode()
+        try:
+            urllib.request.urlopen(BASE+'/streams/'+c['id']+'/index.m3u8',timeout=15)
+            raise AssertionError('Maximum HLS sessions was bypassed')
+        except urllib.error.HTTPError as e:
+            assert e.code in (400,403,429,503),e.code
+        print('PASS: domain aliases and MediaMTX HLS session caps are enforced')
+        policy['enabled']=False
+        api(BASE,f"/api/channels/{c['id']}",'PUT',{'name':record['name'],'policy':policy},admin=True)
+        wait(lambda:not next(x for x in api(BASE,'/api/channels')['channels'] if x['id']==c['id'])['online'])
+        try:
+            urllib.request.urlopen(BASE+'/streams/'+c['id']+'/index.m3u8',timeout=5)
+            raise AssertionError('Disabled channel allowed playback')
+        except urllib.error.HTTPError as e:assert e.code==403
+        policy.update(enabled=True, maxReaders=100, ingestMbps=1)
+        api(BASE,f"/api/channels/{c['id']}",'PUT',{'name':record['name'],'policy':policy},admin=True)
+        api(c['base'],'/api/relay/stop','POST',{})
+        url=f"srt://mediamtx:8890?mode=caller&streamid=publish:streams/{c['id']}:{c['id']}:"+hashlib.sha256(('signaldesk-srt-auth-v1:'+new['publishingKey']).encode()).hexdigest()+f"&passphrase={new['publishingKey']}&pbkeylen=32&pkt_size=1316"
+        over=subprocess.run(['docker','exec',containers[0],'ffmpeg','-v','error','-re','-f','lavfi','-i','testsrc2=size=640x360:rate=25','-t','25','-c:v','libx264','-preset','ultrafast','-b:v','4M','-minrate','4M','-maxrate','4M','-bufsize','4M','-x264-params','nal-hrd=cbr','-f','mpegts',url],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=35)
+        assert over.returncode!=0,'Publisher bitrate cap was bypassed'
+        print('PASS: disabling a channel blocks playback and excessive publisher bitrate is disconnected')
+
 finally:
     for c in channels:
         if 'base' in c:
