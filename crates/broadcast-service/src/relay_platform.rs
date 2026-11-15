@@ -218,13 +218,13 @@ pub(super) async fn update(
         .map_err(|_| failure())?
         .ok_or((StatusCode::NOT_FOUND, "Channel not found"))?;
     let old = policy(&app, &id).await?;
-    // MediaMTX restarts a path when maxReaders changes; metadata and bandwidth edits stay live.
+    // Reserve one MediaMTX reader for the internal HLS muxer. Reader-limit changes reconnect its path.
     if body.policy.enabled && !old.enabled {
         app.client
             .post(format!("{}/v3/config/paths/add/streams/{id}", app.media))
             .json(
                 &json!({"source":"publisher","overridePublisher":false,"record":false,
-                "srtPublishPassphrase":secret,"maxReaders":body.policy.max_readers}),
+                "srtPublishPassphrase":secret,"maxReaders":body.policy.max_readers + 1}),
             )
             .send()
             .await
@@ -234,7 +234,7 @@ pub(super) async fn update(
     } else if body.policy.enabled && old.max_readers != body.policy.max_readers {
         app.client
             .patch(format!("{}/v3/config/paths/patch/streams/{id}", app.media))
-            .json(&json!({"maxReaders":body.policy.max_readers}))
+            .json(&json!({"maxReaders":body.policy.max_readers + 1}))
             .send()
             .await
             .map_err(|_| failure())?
@@ -390,6 +390,17 @@ async fn proxy(
     }
     let response = request.send().await.map_err(|_| failure())?;
     let status = response.status();
+    if status == reqwest::StatusCode::INTERNAL_SERVER_ERROR {
+        let message = response.text().await.map_err(|_| failure())?;
+        return Err(if message.contains("maximum reader count reached") {
+            (
+                StatusCode::TOO_MANY_REQUESTS,
+                "Channel HLS session limit reached",
+            )
+        } else {
+            failure()
+        });
+    }
     let mut builder = Response::builder()
         .status(status)
         .header(header::CACHE_CONTROL, "no-store")

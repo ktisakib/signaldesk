@@ -92,9 +92,9 @@ async fn media_path(app: &App, id: &str, secret: &str) -> Result<(), (StatusCode
     if !policy.enabled {
         return Ok(());
     }
-    // Channel creation is explicit; publishers cannot create arbitrary paths.
+    // One reader slot belongs to the internal HLS muxer; all other slots are viewer sessions.
     let url = format!("{}/v3/config/paths/add/streams/{id}", app.media);
-    app.client.post(url).json(&json!({"source":"publisher", "overridePublisher":false, "srtPublishPassphrase":secret,"record":false,"maxReaders":policy.max_readers})).send().await.map_err(|_|failure())?.error_for_status().map_err(|_|failure())?;
+    app.client.post(url).json(&json!({"source":"publisher", "overridePublisher":false, "srtPublishPassphrase":secret,"record":false,"maxReaders":policy.max_readers + 1})).send().await.map_err(|_|failure())?.error_for_status().map_err(|_|failure())?;
     Ok(())
 }
 async fn remove_media(app: &App, id: &str) -> Result<(), (StatusCode, &'static str)> {
