@@ -74,4 +74,12 @@ Start the laptop's queue and enable relay output. Confirm LIVE in the directory 
 
 If publishing fails, check UDP forwarding, enabled state, credentials and publisher bitrate. If HTTPS fails, check DNS A/AAAA, TCP forwarding and gateway logs. A saved domain remains pending until DNS and routing permit certificate issuance.
 
+If the public address shows your router login or a certificate for `tplinkwifi.net`, move or disable WAN remote administration on TCP 80/443 and correct the forwarding rules above. Never enter the relay administrator token into that router page. Let's Encrypt must reach Caddy on the relay, rather than the router's web interface.
+
+If Docker reports `Unable to enable DNAT rule` with a missing `DOCKER` chain, its firewall rules may have been cleared after Docker started. During a maintenance window, restart Docker, then recreate the gateway. This briefly interrupts all containers on that host; it preserves named volumes and channel credentials.
+
+    sudo systemctl restart docker
+    docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml up --no-build -d --force-recreate --no-deps gateway
+    docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml ps
+
 Back up the private environment, channel database and certificate volumes. Backups contain publishing secrets.
