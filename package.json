@@ -15,7 +15,12 @@
     "service": "cargo run --bin broadcast-service",
     "setup:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-windows.ps1",
     "build:windows": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-windows.ps1",
-    "service:build": "cargo build --bin broadcast-service"
+    "service:build": "cargo build --bin broadcast-service",
+    "accounts": "node --import tsx server/index.ts",
+    "auth:generate": "auth generate --config server/auth.ts --output server/db/auth-schema.ts --yes",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "test:accounts": "node --test tests/accounts.test.ts"
   },
   "dependencies": {
     "@astrojs/react": "^7.1.2",
@@ -27,11 +32,14 @@
     "@tailwindcss/vite": "^4.2.0",
     "@tauri-apps/api": "^2.0.0",
     "astro": "^7.4.4",
+    "better-auth": "^1.7.25",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.5.1",
+    "drizzle-orm": "^0.45.4",
     "hls.js": "^1.6.0",
     "lucide-react": "latest",
+    "postgres": "^4.1.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "tailwind-merge": "^3.0.0",
@@ -46,8 +54,11 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "auth": "^1.7.25",
+    "drizzle-kit": "^0.31.11",
     "oxlint": "latest",
     "shadcn": "^4.23.0",
+    "tsx": "^4.23.15",
     "typescript": "latest"
   }
 }

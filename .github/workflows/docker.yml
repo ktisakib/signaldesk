@@ -77,6 +77,8 @@ jobs:
           docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml config --quiet
           docker run --rm -v "$PWD/docker/relay-public.Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2.11.2-alpine caddy validate --config /etc/caddy/Caddyfile
           python scripts/smoke-relay.py
+      - name: Build optional account service
+        run: docker build --target accounts-runtime -t signaldesk-accounts:local .
       - name: Publish verified relay and studio to GHCR
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
@@ -87,8 +89,8 @@ jobs:
         run: |
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
           registry="ghcr.io/${REPOSITORY,,}"
-          for role in relay studio; do
-            if [ "$role" = relay ]; then source_image=signaldesk-relay:local; else source_image=signaldesk:local; fi
+          for role in relay studio accounts; do
+            if [ "$role" = relay ]; then source_image=signaldesk-relay:local; elif [ "$role" = accounts ]; then source_image=signaldesk-accounts:local; else source_image=signaldesk:local; fi
             docker tag "$source_image" "$registry-$role:sha-$COMMIT"
             docker tag "$source_image" "$registry-$role:stable"
             # Publish the tested amd64 manifest directly; GHCR can reject local provenance indexes.
@@ -104,3 +106,27 @@ jobs:
       - name: Remove CI containers and test data
         if: always()
         run: docker compose down --volumes
+
+  accounts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: disposable-accounts-test-only
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      ACCOUNTS_TEST_DATABASE: '1'
+      DATABASE_URL: postgres://postgres:disposable-accounts-test-only@127.0.0.1:5432/postgres
+      BETTER_AUTH_URL: http://localhost:29792
+      BETTER_AUTH_SECRET: disposable-ci-auth-secret-not-for-production-2026
+      RELAY_ADMIN_TOKEN: disposable-mock-relay-token-not-a-publishing-key
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v5
+        with: {node-version: 24, cache: npm}
+      - run: npm ci
+      - run: npm run db:migrate
+      - run: node --import tsx tests/accounts.integration.ts
