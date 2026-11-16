@@ -71,7 +71,6 @@ HEALTHCHECK --interval=5s --timeout=3s --start-period=30s --retries=6 \
     CMD curl --fail --silent http://127.0.0.1:9790/api/health || exit 1
 ENTRYPOINT ["/usr/local/bin/relay-server"]
 
-FROM runtime AS studio-runtime
 
 # Optional Better Auth control plane; no broadcaster media or publishing keys.
 FROM web AS accounts-runtime
@@ -79,3 +78,6 @@ COPY server ./server
 USER node
 ENV ACCOUNTS_BIND=0.0.0.0
 CMD ["node", "--import", "tsx", "server/index.ts"]
+
+# Keep the broadcaster as the default image for existing Docker deployments.
+FROM runtime AS studio-runtime
