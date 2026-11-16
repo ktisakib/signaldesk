@@ -6,7 +6,11 @@ cd "$ROOT"
 test -f .env.relay || { echo 'Run python3 scripts/setup-relay.py first.' >&2; exit 1; }
 compose() {
     if [ "$(sed -n 's/^RELAY_PUBLIC_ENABLED=//p' .env.relay)" = true ]; then
-        docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml "$@"
+        if [ "$(sed -n 's/^RELAY_ACCOUNTS_ENABLED=//p' .env.relay)" = true ]; then
+            docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml -f compose.accounts.yaml "$@"
+        else
+            docker compose --env-file .env.relay -f compose.relay.yaml -f compose.public.yaml "$@"
+        fi
     else
         docker compose --env-file .env.relay -f compose.relay.yaml "$@"
     fi

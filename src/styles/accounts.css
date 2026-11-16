@@ -1,0 +1,114 @@
+.account-shell {
+  max-width: 1280px;
+  margin: auto;
+  padding: 48px 32px;
+  color: var(--foreground);
+}
+.account-header,
+.account-row,
+.account-summary,
+.account-header nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.account-header {
+  margin-bottom: 48px;
+}
+.account-shell h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  letter-spacing: -0.05em;
+  margin: 12px 0;
+}
+.account-shell p,
+.account-shell small {
+  color: var(--muted-foreground);
+}
+.account-shell section {
+  padding: 28px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+}
+.account-shell h2 {
+  font-size: 1.5rem;
+  margin-bottom: 8px;
+}
+.account-shell form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.account-shell label {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+.account-shell a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.account-login {
+  max-width: 440px;
+}
+.account-summary {
+  padding: 20px;
+  background: var(--muted);
+  border-radius: 8px;
+}
+.account-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  align-items: end;
+}
+.account-channels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+.account-channels article {
+  border: 1px solid var(--border);
+  padding: 24px;
+  border-radius: 8px;
+}
+.account-select {
+  width: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+}
+.account-table {
+  overflow: auto;
+}
+.account-table table {
+  width: 100%;
+  text-align: left;
+  border-collapse: collapse;
+  margin: 24px 0;
+}
+.account-table th,
+.account-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.account-error {
+  color: #fca5a5 !important;
+}
+.account-shell button {
+  min-height: 40px;
+}
+@media (max-width: 640px) {
+  .account-shell {
+    padding: 24px 16px;
+  }
+  .account-header,
+  .account-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .account-channels {
+    grid-template-columns: 1fr;
+  }
+}

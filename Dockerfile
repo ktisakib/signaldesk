@@ -5,6 +5,7 @@ COPY package.json package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 COPY astro.config.mjs tsconfig.json components.json ./
 COPY src ./src
+COPY server ./server
 RUN npm run build
 
 FROM rust:1.97.1-bookworm AS engine
@@ -70,4 +71,13 @@ HEALTHCHECK --interval=5s --timeout=3s --start-period=30s --retries=6 \
     CMD curl --fail --silent http://127.0.0.1:9790/api/health || exit 1
 ENTRYPOINT ["/usr/local/bin/relay-server"]
 
+
+# Optional Better Auth control plane; no broadcaster media or publishing keys.
+FROM web AS accounts-runtime
+COPY server ./server
+USER node
+ENV ACCOUNTS_BIND=0.0.0.0
+CMD ["node", "--import", "tsx", "server/index.ts"]
+
+# Keep the broadcaster as the default image for existing Docker deployments.
 FROM runtime AS studio-runtime

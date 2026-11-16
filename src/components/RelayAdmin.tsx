@@ -38,7 +38,7 @@ const initialPlatform: Platform = {
   publicWebUrl: "http://103.140.205.192:18088",
   adminDomain: "",
 };
-async function request(
+async function relayRequest(
   path: string,
   token = "",
   method = "GET",
@@ -55,10 +55,13 @@ async function request(
   if (!response.ok) throw new Error(await response.text());
   return response.json();
 }
-export default function RelayAdmin() {
+export default function RelayAdmin({ accountMode = false }: { accountMode?: boolean }) {
+  const Root = accountMode ? 'div' : 'main';
+  const request = (path: string, token = '', method = 'GET', body?: unknown) =>
+    relayRequest(accountMode ? '/api/control/relay' + path : path, accountMode ? '' : token, method, body);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [token, setToken] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
+  const [unlocked, setUnlocked] = useState(accountMode);
   const [platform, setPlatform] = useState(initialPlatform);
   const [id, setId] = useState(""),
     [name, setName] = useState("");
@@ -164,11 +167,12 @@ export default function RelayAdmin() {
     });
   }
   return (
-    <main className="relay-console">
+    <Root className="relay-console">
       <header className="relay-console-heading">
         <div>
           <span className="eyebrow">SIGNALDESK / RELAY</span>
           <h1>Live channels.</h1>
+        <a href="/account/">Client & team sign in →</a>
           <p>
             Broadcasters keep their programs and schedules on their own
             computers.
@@ -329,6 +333,7 @@ export default function RelayAdmin() {
           </Button>
         </section>
       )}
+      {!accountMode && (
       <section className="panel relay-panel">
         <h2>Super administration</h2>
         {!canAdmin && (
@@ -385,6 +390,7 @@ export default function RelayAdmin() {
           )}
         </form>
       </section>
+      )}
       {unlocked && (
         <>
           <section className="panel relay-panel">
@@ -585,7 +591,7 @@ export default function RelayAdmin() {
             onClick={() =>
               downloadRelayProfile({
                 format: "signaldesk-connection-v1",
-                channelName: secret.id,
+                channelName: channels.find((channel) => channel.id === secret.id)?.name || secret.id,
                 host: platform.publicHost,
                 port: platform.srtPort,
                 viewerUrl: platform.publicWebUrl.replace(/\/$/, ""),
@@ -597,6 +603,6 @@ export default function RelayAdmin() {
           </Button>
         </section>
       )}
-    </main>
+    </Root>
   );
 }

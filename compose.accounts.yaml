@@ -1,0 +1,25 @@
+# Optional account layer. Use after configuring and migrating PostgreSQL/Neon.
+services:
+  accounts:
+    image: '${ACCOUNTS_IMAGE:-signaldesk-accounts:local}'
+    build: { context: ., target: accounts-runtime }
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: '${DATABASE_URL:?Set the Neon PostgreSQL connection string}'
+      BETTER_AUTH_SECRET: '${BETTER_AUTH_SECRET:?Generate at least 32 random characters}'
+      BETTER_AUTH_URL: '${BETTER_AUTH_URL:-https://tv.pressmos.com}'
+      RELAY_ADMIN_TOKEN: '${RELAY_ADMIN_TOKEN:?Preserve the relay administrator token}'
+      RELAY_INTERNAL_URL: http://relay:9790
+      ACCOUNTS_BIND: 0.0.0.0
+    read_only: true
+    tmpfs: ['/tmp:size=32m']
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options: {max-size: '10m', max-file: '3'}
+  gateway:
+    volumes:
+      - ./docker/relay-accounts.Caddyfile:/etc/caddy/Caddyfile:ro
