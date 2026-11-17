@@ -1,7 +1,7 @@
-SignalDesk 0.1.6 adds live queue editing, current-program and elapsed-time indicators, clock-time rundowns, batch video imports and signed desktop updates.
+SignalDesk 0.1.7 adds account license keys with expiry, broadcaster installation limits and multiple channel ownership per client account.
 
-Queue changes prepare in the background and apply at the next available program boundary. The current clip finishes. Already buffered media can still play before a late edit takes effect. Keep source media available on the laptop.
+Administrators can issue, renew, revoke and rotate licenses, release device slots, and manage named TV channels. Broadcasters activate their desktop installation in the client portal and import its private profile. Multiple channels on one installation share a device slot. The relay rejects missing/expired/revoked activations and disconnects unauthorized running licensed publishers.
 
-Install this release manually once when upgrading from v0.1.3. Future signed updates are offered inside the desktop app. Stop broadcasting before selecting Install update. The offline Windows installer includes the media runtime and WebView2.
+Existing unlicensed channels retain their current profiles. Upgrade to this release before enabling a license on an account. Stop broadcasting before installing an update. Signed updates are offered in the desktop application; the single Windows installer includes the offline media runtime and WebView2.
 
-The Windows executable is unsigned by Authenticode. See the setup guide for broadcaster connection profiles and operating instructions.
+Installation identity is a software credential, not hardware attestation. Keep private profiles and the installation data directory private. The Windows executable is unsigned by Authenticode.

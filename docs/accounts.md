@@ -19,6 +19,10 @@ Run migration commands from an environment containing DATABASE_URL; the tools do
 
 `npm run auth:generate` uses the official Better Auth CLI to generate `server/db/auth-schema.ts`, including admin and database rate-limit tables. Re-run after changing plugins. Then `npm run db:generate` uses Drizzle Kit to generate SQL and metadata in `drizzle/`. Review and commit these files. Apply using `npm run db:migrate` after a backup. Generation works before Neon is connected; migration requires PostgreSQL.
 
+## Licensing
+
+Account licenses add expiry, broadcaster installation limits and channel allowances. See [License setup](licenses.md). For licensed accounts these entitlements take precedence over legacy subscriptions.
+
 ## Access model
 
 | Role | Access |

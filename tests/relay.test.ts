@@ -28,3 +28,29 @@ test("connection profiles retain only known fields and require a version and por
   }
   assert.throws(() => readRelayProfile(" ".repeat(8193)));
 });
+
+test("licensed profiles retain the bound installation and reject partial credentials", () => {
+  const profile = {
+    format: "signaldesk-connection-v1",
+    channelName: "news-tv",
+    host: "relay.example.test",
+    port: 8890,
+    viewerUrl: "https://relay.example.test",
+    streamKey: "a".repeat(64),
+    deviceId: "11111111-1111-4111-8111-111111111111",
+    deviceToken: "b".repeat(64),
+  };
+  assert.equal(
+    readRelayProfile(JSON.stringify(profile)).deviceToken,
+    profile.deviceToken,
+  );
+  assert.throws(() =>
+    readRelayProfile(JSON.stringify({ ...profile, deviceToken: undefined })),
+  );
+  assert.throws(() =>
+    readRelayProfile(JSON.stringify({ ...profile, deviceId: undefined })),
+  );
+  assert.throws(() =>
+    readRelayProfile(JSON.stringify({ ...profile, deviceToken: "bad" })),
+  );
+});

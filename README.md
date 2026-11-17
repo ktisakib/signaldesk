@@ -304,6 +304,7 @@ Current limits: one pending queue start per local engine; no recurring EPG calen
 ## More guides
 
 - [Accounts, roles, subscriptions and Neon setup](docs/accounts.md)
+- [License keys, expiry, device slots and multiple channels](docs/licenses.md)
 
 - [Complete server and broadcaster setup](docs/setup-guide.md)
 - [LAN relay configuration and limits](docs/lan-relay.md)

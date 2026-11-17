@@ -24,6 +24,10 @@ struct SavedConfig {
     port: u16,
     viewer_url: String,
     stream_key: String,
+    #[serde(default)]
+    device_token: Option<String>,
+    #[serde(default)]
+    device_id: Option<String>,
 }
 
 impl SavedConfig {
@@ -68,6 +72,18 @@ impl SavedConfig {
             return Err(invalid(
                 "Paste the channel publishing key supplied by the relay administrator",
             ));
+        }
+        if self.device_token.is_some() != self.device_id.is_some()
+            || self
+                .device_token
+                .as_ref()
+                .is_some_and(|t| t.len() != 64 || !t.bytes().all(|b| b.is_ascii_hexdigit()))
+            || self
+                .device_id
+                .as_ref()
+                .is_some_and(|id| uuid::Uuid::parse_str(id).is_err())
+        {
+            return Err(invalid("Invalid licensed device profile"));
         }
         Ok(())
     }
@@ -191,6 +207,8 @@ struct ConfigUpdate {
     port: u16,
     viewer_url: String,
     stream_key: Option<String>,
+    device_token: Option<String>,
+    device_id: Option<String>,
 }
 
 async fn put_config(
@@ -213,10 +231,27 @@ async fn put_config(
         stream_key: body
             .stream_key
             .map(|key| key.trim().to_string())
-            .or_else(|| previous.map(|config| config.stream_key))
+            .or_else(|| previous.as_ref().map(|config| config.stream_key.clone()))
             .ok_or_else(|| invalid("Paste a relay server stream key first"))?,
+        device_token: body.device_token.or_else(|| {
+            previous
+                .as_ref()
+                .filter(|c| c.channel_name == body.channel_name && c.host == body.host)
+                .and_then(|c| c.device_token.clone())
+        }),
+        device_id: body.device_id.or_else(|| {
+            previous
+                .as_ref()
+                .filter(|c| c.channel_name == body.channel_name && c.host == body.host)
+                .and_then(|c| c.device_id.clone())
+        }),
     };
     config.validate()?;
+    if let Some(id) = &config.device_id {
+        if id != &installation_id(&state.home).await? {
+            return Err(invalid("This licensed profile belongs to another installation. Activate this computer's installation ID."));
+        }
+    }
     save(&state.home, &config).await?;
     Ok(Json(PublicConfig::from(Some(&config))))
 }
@@ -342,7 +377,16 @@ fn relay_args(port: u16, config: &SavedConfig) -> Vec<String> {
         .into_iter()
         .map(String::from),
     );
-    args.push(format!("srt://{}:{}?mode=caller&streamid=publish:streams/{}:{}:{}&passphrase={}&pbkeylen=32&pkt_size=1316&connect_timeout=5000", config.host, config.port, config.channel_name, config.channel_name, crate::srt_auth::proof(&config.stream_key), config.stream_key));
+    let proof = format!(
+        "{}{}",
+        crate::srt_auth::proof(&config.stream_key),
+        config
+            .device_token
+            .as_ref()
+            .map(|t| format!(".{t}"))
+            .unwrap_or_default()
+    );
+    args.push(format!("srt://{}:{}?mode=caller&streamid=publish:streams/{}:{}:{}&passphrase={}&pbkeylen=32&pkt_size=1316&connect_timeout=5000", config.host, config.port, config.channel_name, config.channel_name, proof, config.stream_key));
     args
 }
 
@@ -439,8 +483,45 @@ async fn test_connection(State(state): State<Arc<AppState>>) -> ApiResult<Value>
     ))
 }
 
+// shortcut: copied installation data can clone identity; use OS-bound keys when hardware anti-cloning is required.
+async fn installation_id(home: &Path) -> Result<String, ApiError> {
+    let path = home.join("installation-id");
+    match tokio::fs::read_to_string(&path).await {
+        Ok(value) => {
+            if uuid::Uuid::parse_str(value.trim()).is_ok() {
+                return Ok(value.trim().into());
+            }
+            return Err(storage_error());
+        }
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => return Err(storage_error()),
+    }
+    let id = uuid::Uuid::new_v4().to_string();
+    match tokio::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+        .await
+    {
+        Ok(mut file) => {
+            file.write_all(id.as_bytes())
+                .await
+                .map_err(|_| storage_error())?;
+            Ok(id)
+        }
+        Err(_) => Err(storage_error()),
+    }
+}
+async fn device_id(State(state): State<Arc<AppState>>) -> ApiResult<Value> {
+    let _action = state.actions.lock().await;
+    Ok(Json(
+        json!({"deviceId":installation_id(&state.home).await?}),
+    ))
+}
+
 pub(super) fn router() -> Router<Arc<AppState>> {
     Router::new()
+        .route("/device-id", get(device_id))
         .route(
             "/config",
             get(get_config).put(put_config).delete(clear_config),
@@ -462,6 +543,22 @@ pub(super) fn valid_channel(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn installation_ids_survive_restarts_and_corrupt_ids_fail_closed() {
+        let home = std::env::temp_dir().join(format!(
+            "signaldesk-installation-test-{}",
+            uuid::Uuid::new_v4()
+        ));
+        tokio::fs::create_dir(&home).await.unwrap();
+        let id = installation_id(&home).await.unwrap();
+        assert_eq!(id, installation_id(&home).await.unwrap());
+        assert!(uuid::Uuid::parse_str(&id).is_ok());
+        tokio::fs::write(home.join("installation-id"), "invalid")
+            .await
+            .unwrap();
+        assert!(installation_id(&home).await.is_err());
+        tokio::fs::remove_dir_all(&home).await.unwrap();
+    }
     #[test]
     fn validates_destination_and_keeps_key_out_of_public_config() {
         let mut c = SavedConfig {
@@ -470,6 +567,8 @@ mod tests {
             port: 8890,
             viewer_url: "http://192.168.1.50:8088".into(),
             stream_key: "test-private-key-123456789".into(),
+            device_token: None,
+            device_id: None,
         };
         assert!(c.validate().is_ok());
         let public = serde_json::to_string(&PublicConfig::from(Some(&c))).unwrap();
@@ -488,6 +587,14 @@ mod tests {
             .last()
             .unwrap()
             .contains("streamid=publish:streams/news-a:news-a:"));
+        c.device_token = Some("a".repeat(64));
+        assert!(c.validate().is_err());
+        c.device_id = Some(uuid::Uuid::new_v4().to_string());
+        assert!(c.validate().is_ok());
+        assert!(relay_args(8554, &c)
+            .last()
+            .unwrap()
+            .contains(&format!(".{}&passphrase=", "a".repeat(64))));
         c.host = "host?passphrase=oops".into();
         assert!(c.validate().is_err());
         c.host = "192.168.1.50".into();

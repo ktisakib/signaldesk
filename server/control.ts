@@ -6,6 +6,8 @@ import {
   subscriptions,
   supportGrants,
 } from "./db/platform-schema";
+import { licenseControl, licenseOverview, licenseActive } from "./licenses";
+import { licenses } from "./db/platform-schema";
 import { auth } from "./auth";
 import { permits } from "./permissions";
 
@@ -85,6 +87,7 @@ export async function control(req: Request): Promise<Response> {
       (c: { id: string }) => admin || allowed.has(c.id),
     );
     return Response.json({
+      ...(await licenseOverview(actor.id, admin)),
       actor: { id: actor.id, name: actor.name, role: actor.role },
       channels,
       owners: owners.filter((o) => admin || allowed.has(o.channelId)),
@@ -110,6 +113,8 @@ export async function control(req: Request): Promise<Response> {
   const body = await req.json();
   if (!body || typeof body !== "object" || Array.isArray(body))
     return fail(400, "Expected an object");
+  if (path.startsWith("license-") && req.method === "POST")
+    return licenseControl(actor, path, body, relay);
   const validId = (id: unknown): id is string =>
     typeof id === "string" && /^[a-z0-9][a-z0-9-]{0,47}$/.test(id);
   const name = typeof body.name === "string" ? body.name.trim() : "";
@@ -142,10 +147,16 @@ export async function control(req: Request): Promise<Response> {
         .select()
         .from(subscriptions)
         .where(eq(subscriptions.userId, actor.id));
+      const [license] = await db
+        .select()
+        .from(licenses)
+        .where(eq(licenses.userId, actor.id));
       if (
-        !sub ||
-        sub.status !== "active" ||
-        (sub.expiresAt && sub.expiresAt <= new Date())
+        license
+          ? !licenseActive(license)
+          : !sub ||
+            sub.status !== "active" ||
+            (sub.expiresAt && sub.expiresAt <= new Date())
       )
         return fail(403, "Active subscription required");
     }
@@ -205,18 +216,38 @@ export async function control(req: Request): Promise<Response> {
         .select()
         .from(subscriptions)
         .where(eq(subscriptions.userId, body.userId));
+      const [license] = await tx
+        .select()
+        .from(licenses)
+        .where(eq(licenses.userId, body.userId))
+        .for("update");
       const owned = await tx
         .select()
         .from(channelOwners)
         .where(eq(channelOwners.userId, body.userId));
+      const limit = license ? license.channelLimit : sub?.channelLimit;
+      const active = license
+        ? licenseActive(license)
+        : sub &&
+          sub.status === "active" &&
+          (!sub.expiresAt || sub.expiresAt > new Date());
       if (
-        !sub ||
-        sub.status !== "active" ||
-        (sub.expiresAt && sub.expiresAt <= new Date()) ||
-        (owned.length >= sub.channelLimit &&
+        !active ||
+        (owned.length >= (limit ?? 0) &&
           !owned.some((c) => c.channelId === body.channelId))
       )
-        return fail(409, "Activate subscription or increase channel allowance");
+        return fail(
+          409,
+          "Activate a license/subscription or increase the channel allowance",
+        );
+      const channel = (await relay("/api/channels")).channels.find(
+        (c: { id: string }) => c.id === body.channelId,
+      );
+      if (channel)
+        await relay(`/api/channels/${body.channelId}`, "PUT", {
+          name: channel.name,
+          policy: { ...channel.policy, licenseRequired: !!license },
+        });
       await tx
         .insert(channelOwners)
         .values({ channelId: body.channelId, userId: body.userId })

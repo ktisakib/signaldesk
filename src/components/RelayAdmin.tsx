@@ -10,6 +10,7 @@ interface Policy {
   maxReaders: number;
   egressMbps: number;
   ingestMbps: number;
+  licenseRequired?: boolean;
 }
 interface Channel {
   id: string;
@@ -591,7 +592,7 @@ export default function RelayAdmin({ accountMode = false }: { accountMode?: bool
             onClick={() =>
               downloadRelayProfile({
                 format: "signaldesk-connection-v1",
-                channelName: channels.find((channel) => channel.id === secret.id)?.name || secret.id,
+                channelName: secret.id,
                 host: platform.publicHost,
                 port: platform.srtPort,
                 viewerUrl: platform.publicWebUrl.replace(/\/$/, ""),

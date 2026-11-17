@@ -23,6 +23,7 @@ pub(super) struct Policy {
     pub max_readers: u32,
     pub egress_mbps: u32,
     pub ingest_mbps: u32,
+    pub license_required: bool,
 }
 impl Default for Policy {
     fn default() -> Self {
@@ -32,6 +33,7 @@ impl Default for Policy {
             max_readers: 100,
             egress_mbps: 100,
             ingest_mbps: 10,
+            license_required: false,
         }
     }
 }
@@ -62,7 +64,10 @@ impl Policy {
     }
 }
 pub(super) fn parse_policy(value: &str) -> Policy {
-    serde_json::from_str(value).unwrap_or_default()
+    serde_json::from_str(value).unwrap_or_else(|_| Policy {
+        enabled: false,
+        ..Policy::default()
+    })
 }
 pub(super) async fn migrate(db: &SqlitePool) -> Result<(), sqlx::Error> {
     let columns = sqlx::query("PRAGMA table_info(channels)")
@@ -488,7 +493,22 @@ pub(super) async fn monitor(app: Arc<App>) {
                         && (bytes - old) as f64 * 8. / now.duration_since(time).as_secs_f64()
                             > policy.ingest_mbps as f64 * 1_000_000.
                 });
-            if exceeded || !policy.enabled {
+            let license_denied = if policy.license_required {
+                let token = {
+                    let permits = app.license_permits.lock().await;
+                    path["source"]["id"]
+                        .as_str()
+                        .and_then(|source| permits.get(source))
+                        .map(|(token, _)| token.clone())
+                };
+                match token {
+                    Some(token) => !super::licensed(&app, id, &token).await,
+                    None => true,
+                }
+            } else {
+                false
+            };
+            if exceeded || !policy.enabled || license_denied {
                 if let Some(source) = path["source"]["id"].as_str() {
                     let _ = app
                         .client
@@ -498,6 +518,15 @@ pub(super) async fn monitor(app: Arc<App>) {
                 }
             }
         }
+        app.license_permits
+            .lock()
+            .await
+            .retain(|source, (_, created)| {
+                created.elapsed() < Duration::from_secs(60)
+                    || paths
+                        .iter()
+                        .any(|p| p["source"]["id"].as_str() == Some(source.as_str()))
+            });
         previous.retain(|id, _| paths.iter().any(|p| p["name"] == format!("streams/{id}")));
     }
 }
@@ -506,6 +535,8 @@ mod tests {
     use super::*;
     #[test]
     fn policies_validate_domains_and_finite_limits() {
+        assert!(!parse_policy("corrupt policy").enabled);
+        assert!(parse_policy("{}").enabled);
         for value in [
             "https://news.example.com",
             "*.example.com",
@@ -575,9 +606,53 @@ mod integration {
                 streaming: reqwest::Client::new(),
                 changes: Mutex::new(()),
                 limits: Limits::default(),
+                license_url: None,
+                license_permits: Mutex::new(HashMap::new()),
             }),
             task,
         )
+    }
+    #[tokio::test]
+    async fn licensed_channels_fail_closed_without_an_activation_checker() {
+        let (app, task) = fixture().await;
+        sqlx::query("UPDATE channels SET policy=? WHERE id='legacy'")
+            .bind(r#"{"licenseRequired":true}"#)
+            .execute(&app.db)
+            .await
+            .unwrap();
+        let result = auth(
+            State(app.clone()),
+            Path(app.hook.clone()),
+            Json(Auth {
+                user: "legacy".into(),
+                password: format!(
+                    "{}.{}",
+                    super::super::srt_auth::proof("saved-secret"),
+                    "a".repeat(64)
+                ),
+                action: "publish".into(),
+                path: "streams/legacy".into(),
+                protocol: "srt".into(),
+                id: Some("test-connection".into()),
+            }),
+        )
+        .await;
+        assert_eq!(result, StatusCode::FORBIDDEN);
+        let read = auth(
+            State(app.clone()),
+            Path(app.hook.clone()),
+            Json(Auth {
+                user: String::new(),
+                password: String::new(),
+                action: "read".into(),
+                path: "streams/legacy".into(),
+                protocol: "hls".into(),
+                id: None,
+            }),
+        )
+        .await;
+        assert_eq!(read, StatusCode::NO_CONTENT);
+        task.abort();
     }
     fn admin() -> HeaderMap {
         let mut headers = HeaderMap::new();
@@ -682,7 +757,8 @@ mod integration {
                     password: "".into(),
                     action: "read".into(),
                     path: "streams/news".into(),
-                    protocol: "hls".into()
+                    protocol: "hls".into(),
+                    id: None
                 })
             )
             .await,

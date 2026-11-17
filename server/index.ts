@@ -6,7 +6,11 @@ const ready =
   (process.env.BETTER_AUTH_SECRET?.length ?? 0) >= 32 &&
   !!process.env.RELAY_ADMIN_TOKEN;
 const services = ready
-  ? await Promise.all([import("./auth"), import("./control")])
+  ? await Promise.all([
+      import("./auth"),
+      import("./control"),
+      import("./licenses"),
+    ])
   : null;
 const server = createServer(async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
@@ -19,7 +23,9 @@ const server = createServer(async (req, res) => {
     return send(503, "Account service awaits database configuration");
   if (req.url?.startsWith("/api/auth/"))
     return toNodeHandler(services[0].auth)(req, res);
-  if (!req.url?.startsWith("/api/control/")) return send(404, "Not found");
+  const privateLicense = req.url === "/private/publish";
+  if (!privateLicense && !req.url?.startsWith("/api/control/"))
+    return send(404, "Not found");
   try {
     let size = 0;
     const chunks: Buffer[] = [];
@@ -32,12 +38,17 @@ const server = createServer(async (req, res) => {
     for (const [key, value] of Object.entries(req.headers))
       if (value)
         headers.set(key, Array.isArray(value) ? value.join(", ") : value);
-    const request = new Request(new URL(req.url, process.env.BETTER_AUTH_URL), {
-      method: req.method,
-      headers,
-      ...(size ? { body: Buffer.concat(chunks) } : {}),
-    });
-    const response = await services[1].control(request);
+    const request = new Request(
+      new URL(req.url!, process.env.BETTER_AUTH_URL),
+      {
+        method: req.method,
+        headers,
+        ...(size ? { body: Buffer.concat(chunks) } : {}),
+      },
+    );
+    const response = privateLicense
+      ? await services[2].publicationAllowed(request)
+      : await services[1].control(request);
     res.writeHead(response.status, Object.fromEntries(response.headers));
     res.end(await response.text());
   } catch (error) {

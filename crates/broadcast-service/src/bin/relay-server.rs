@@ -27,6 +27,8 @@ struct App {
     streaming: reqwest::Client,
     changes: Mutex<()>,
     limits: platform::Limits,
+    license_url: Option<String>,
+    license_permits: Mutex<std::collections::HashMap<String, (String, std::time::Instant)>>,
 }
 fn denied() -> (StatusCode, &'static str) {
     (StatusCode::UNAUTHORIZED, "Authentication required")
@@ -233,6 +235,8 @@ struct Auth {
     action: String,
     path: String,
     protocol: String,
+    #[serde(default)]
+    id: Option<String>,
 }
 async fn auth(
     State(app): State<Arc<App>>,
@@ -258,18 +262,61 @@ async fn auth(
     if body.action == "read" && body.protocol == "hls" {
         return StatusCode::NO_CONTENT;
     }
+    let (proof, device_token) = body
+        .password
+        .split_once('.')
+        .unwrap_or((&body.password, ""));
     if body.action == "publish"
         && body.protocol == "srt"
         && body.user == id
-        && equal(
-            &body.password,
-            &srt_auth::proof(&row.get::<String, _>("secret")),
-        )
+        && equal(proof, &srt_auth::proof(&row.get::<String, _>("secret")))
     {
+        if platform::parse_policy(&row.get::<String, _>("policy")).license_required {
+            if body.id.as_deref().is_none_or(str::is_empty)
+                || !licensed(&app, id, device_token).await
+            {
+                return StatusCode::FORBIDDEN;
+            }
+            let mut permits = app.license_permits.lock().await;
+            if permits.len() >= 10000 && !permits.contains_key(body.id.as_deref().unwrap()) {
+                return StatusCode::SERVICE_UNAVAILABLE;
+            }
+            permits.insert(
+                body.id.unwrap(),
+                (device_token.into(), std::time::Instant::now()),
+            );
+        }
         StatusCode::NO_CONTENT
     } else {
         StatusCode::UNAUTHORIZED
     }
+}
+async fn licensed(app: &App, id: &str, token: &str) -> bool {
+    let Some(url) = &app.license_url else {
+        return false;
+    };
+    app.client
+        .post(url)
+        .bearer_auth(&app.admin)
+        .json(&json!({"channelId":id,"token":token}))
+        .send()
+        .await
+        .is_ok_and(|r| r.status() == StatusCode::NO_CONTENT)
+}
+async fn connection(
+    State(app): State<Arc<App>>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> Reply {
+    authorize(&app, &headers)?;
+    let secret: Option<String> = sqlx::query_scalar("SELECT secret FROM channels WHERE id=?")
+        .bind(id)
+        .fetch_optional(&app.db)
+        .await
+        .map_err(|_| failure())?;
+    Ok(Json(
+        json!({"streamKey":secret.ok_or((StatusCode::NOT_FOUND,"Channel not found"))?}),
+    ))
 }
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -303,6 +350,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .build()?,
         changes: Mutex::new(()),
         limits: platform::Limits::default(),
+        license_url: std::env::var("RELAY_LICENSE_URL").ok(),
+        license_permits: Mutex::new(std::collections::HashMap::new()),
     });
     // Wait for the media API before restoring persistent channel configuration.
     for _ in 0..30 {
@@ -387,6 +436,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/streams/{id}/{*file}", get(platform::stream))
         .route("/live/{*file}", get(platform::domain_stream))
         .route("/api/channels/{id}/rotate", post(rotate))
+        .route("/api/channels/{id}/connection", get(connection))
         .fallback_service(
             ServeDir::new(&root)
                 .not_found_service(ServeFile::new(format!("{root}/relay/index.html"))),
