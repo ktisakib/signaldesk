@@ -5,6 +5,8 @@ export interface RelayProfile {
   port: number;
   viewerUrl: string;
   streamKey: string;
+  deviceId?: string;
+  deviceToken?: string;
 }
 
 export function readRelayProfile(text: string): Omit<RelayProfile, "format"> {
@@ -23,8 +25,34 @@ export function readRelayProfile(text: string): Omit<RelayProfile, "format"> {
     throw new Error(
       "Choose a SignalDesk connection profile from the relay administrator.",
     );
-  const { channelName, host, port, viewerUrl, streamKey } = value;
-  return { channelName, host, port, viewerUrl, streamKey };
+  if (
+    (value.deviceId === undefined) !== (value.deviceToken === undefined) ||
+    (value.deviceId !== undefined &&
+      (typeof value.deviceId !== "string" ||
+        !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(
+          value.deviceId,
+        ) ||
+        typeof value.deviceToken !== "string" ||
+        !/^[a-f0-9]{64}$/.test(value.deviceToken)))
+  )
+    throw new Error("Invalid licensed device profile.");
+  const {
+    channelName,
+    host,
+    port,
+    viewerUrl,
+    streamKey,
+    deviceId,
+    deviceToken,
+  } = value;
+  return {
+    channelName,
+    host,
+    port,
+    viewerUrl,
+    streamKey,
+    ...(deviceId ? { deviceId, deviceToken } : {}),
+  };
 }
 
 export function downloadRelayProfile(profile: RelayProfile) {

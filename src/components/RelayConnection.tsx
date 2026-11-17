@@ -25,6 +25,7 @@ export default function RelayConnection() {
     viewerUrl: "",
     configured: false,
   });
+  const [installation, setInstallation] = useState("");
   const [key, setKey] = useState("");
   const [status, setStatus] = useState<Status>({ state: "idle", error: null });
   const [error, setError] = useState("");
@@ -33,6 +34,7 @@ export default function RelayConnection() {
   useEffect(() => {
     let cancelled = false;
     if (!connected) return;
+    void api<{deviceId:string}>("/api/relay/device-id").then(v=>setInstallation(v.deviceId)).catch(e=>setError(errorMessage(e)));
     void api<Connection>("/api/relay/config")
       .then((v) => {
         if (!cancelled) setDraft(v);
@@ -109,6 +111,9 @@ export default function RelayConnection() {
           Send your local channel to the shared server. Videos, schedules and
           playlists stay on this computer.
         </p>
+        <label htmlFor="relay-installation">This broadcaster installation ID</label>
+        <Input id="relay-installation" readOnly value={installation}/>
+        <p>For a licensed channel, use this ID in your account portal to activate this installation and download its private connection profile.</p>
         <label htmlFor="relay-profile">Import a connection profile</label>
         <Input
           id="relay-profile"

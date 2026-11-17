@@ -67,6 +67,8 @@ jobs:
           cargo clippy -p broadcast-service --all-targets -- -D warnings
           cargo test -p broadcast-service
           cargo test -p broadcast-service -- --ignored --nocapture --test-threads=1
+          cargo build -p broadcast-service --bin relay-server
+          python scripts/smoke-licensed-relay.py
       - name: Build and verify the multi-broadcaster LAN relay
         timeout-minutes: 10
         env:

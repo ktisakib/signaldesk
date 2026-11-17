@@ -2,6 +2,7 @@ import { useEffect, useState, type SubmitEvent } from "react";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Licenses, { type License, type LicensedDevice } from "./Licenses";
 import RelayAdmin from "./RelayAdmin";
 import { permits } from "../../server/permissions";
 interface Person {
@@ -23,6 +24,8 @@ interface Subscription {
   expiresAt: string | null;
 }
 interface Overview {
+  licenses: License[];
+  devices: LicensedDevice[];
   actor: Person;
   clients: Person[];
   channels: Channel[];
@@ -102,6 +105,7 @@ export default function AccountPanel() {
         </div>
         <nav>
           <a href="/relay/">Live channels</a>
+          {session.data && <a href="#licenses">Licenses & devices</a>}
           {session.data && (
             <Button
               variant="outline"
@@ -246,6 +250,17 @@ export default function AccountPanel() {
               </p>
             )}
           </section>
+          {data && (
+            <Licenses
+              admin={admin}
+              currentUserId={data.actor.id}
+              clients={data.clients}
+              channels={data.channels}
+              licenses={data.licenses}
+              devices={data.devices}
+              refresh={load}
+            />
+          )}
           <section>
             <h2>Subscriptions</h2>
             <p>

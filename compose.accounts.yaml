@@ -20,6 +20,9 @@ services:
     logging:
       driver: json-file
       options: {max-size: '10m', max-file: '3'}
+  relay:
+    environment:
+      RELAY_LICENSE_URL: http://accounts:9792/private/publish
   gateway:
     volumes:
       - ./docker/relay-accounts.Caddyfile:/etc/caddy/Caddyfile:ro
