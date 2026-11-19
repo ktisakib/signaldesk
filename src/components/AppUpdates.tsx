@@ -142,7 +142,7 @@ export function SettingsUpdateCard() {
         <div className="update-card-status">
           <div className="update-status-row">
             <span className="update-label">Current Version</span>
-            <span className="update-value font-mono">v0.1.8</span>
+            <span className="update-value font-mono">v0.1.9</span>
           </div>
           <div className="update-status-row">
             <span className="update-label">Update Status</span>

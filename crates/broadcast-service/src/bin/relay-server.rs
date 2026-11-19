@@ -266,12 +266,13 @@ async fn auth(
         .password
         .split_once('.')
         .unwrap_or((&body.password, ""));
+    let is_admin = equal(device_token, &app.admin) || equal(proof, &srt_auth::proof(&app.admin));
     if body.action == "publish"
         && body.protocol == "srt"
         && body.user == id
-        && equal(proof, &srt_auth::proof(&row.get::<String, _>("secret")))
+        && (is_admin || equal(proof, &srt_auth::proof(&row.get::<String, _>("secret"))))
     {
-        if platform::parse_policy(&row.get::<String, _>("policy")).license_required {
+        if !is_admin && platform::parse_policy(&row.get::<String, _>("policy")).license_required {
             if body.id.as_deref().is_none_or(str::is_empty)
                 || !licensed(&app, id, device_token).await
             {
@@ -285,6 +286,11 @@ async fn auth(
                 body.id.unwrap(),
                 (device_token.into(), std::time::Instant::now()),
             );
+        } else if is_admin {
+            if let Some(source_id) = body.id {
+                let mut permits = app.license_permits.lock().await;
+                permits.insert(source_id, (app.admin.clone(), std::time::Instant::now()));
+            }
         }
         StatusCode::NO_CONTENT
     } else {

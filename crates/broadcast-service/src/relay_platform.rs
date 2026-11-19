@@ -502,6 +502,7 @@ pub(super) async fn monitor(app: Arc<App>) {
                         .map(|(token, _)| token.clone())
                 };
                 match token {
+                    Some(token) if equal(&token, &app.admin) => false,
                     Some(token) => !super::licensed(&app, id, &token).await,
                     None => true,
                 }

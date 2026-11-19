@@ -74,14 +74,15 @@ impl SavedConfig {
             ));
         }
         if self.device_token.is_some() != self.device_id.is_some()
-            || self
-                .device_token
-                .as_ref()
-                .is_some_and(|t| t.len() != 64 || !t.bytes().all(|b| b.is_ascii_hexdigit()))
+            || self.device_token.as_ref().is_some_and(|t| {
+                let is_hex_64 = t.len() == 64 && t.bytes().all(|b| b.is_ascii_hexdigit());
+                let is_admin_token = t.len() >= 32 && t.bytes().all(|b| b.is_ascii_graphic());
+                !is_hex_64 && !is_admin_token
+            })
             || self
                 .device_id
                 .as_ref()
-                .is_some_and(|id| uuid::Uuid::parse_str(id).is_err())
+                .is_some_and(|id| uuid::Uuid::parse_str(id).is_err() && id != "admin")
         {
             return Err(invalid("Invalid licensed device profile"));
         }
@@ -248,7 +249,7 @@ async fn put_config(
     };
     config.validate()?;
     if let Some(id) = &config.device_id {
-        if id != &installation_id(&state.home).await? {
+        if id != "admin" && id != &installation_id(&state.home).await? {
             return Err(invalid("This licensed profile belongs to another installation. Activate this computer's installation ID."));
         }
     }
