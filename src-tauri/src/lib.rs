@@ -46,6 +46,11 @@ async fn ensure_service(app: &tauri::AppHandle) -> Result<(), String> {
             .join("../target/debug")
             .join(&file),
     );
+    candidates.push(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../target/release")
+            .join(&file),
+    );
     let service = candidates.into_iter().find(|path| path.is_file()).ok_or(
         "Broadcast engine is missing. Run npm run service:build before opening the desktop app.",
     )?;
@@ -55,6 +60,13 @@ async fn ensure_service(app: &tauri::AppHandle) -> Result<(), String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .env("BROADCAST_SETUP_SCRIPT", setup_script(app));
+    #[cfg(target_os = "macos")]
+    {
+        let current_path = std::env::var("PATH").unwrap_or_default();
+        let augmented =
+            format!("/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:{current_path}");
+        command.env("PATH", augmented);
+    }
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
@@ -132,40 +144,47 @@ async fn api_request(
 #[tauri::command]
 async fn pick_media(app: tauri::AppHandle) -> Result<Option<String>, String> {
     let (send, receive) = tokio::sync::oneshot::channel();
-    app.dialog()
-        .file()
-        .add_filter(
-            "Video",
-            &[
-                "mp4", "mkv", "mov", "avi", "ts", "m4v", "webm", "mpeg", "mpg",
-            ],
-        )
-        .pick_file(move |file| {
-            let _ = send.send(file.map(|file| file.to_string()));
-        });
+    std::thread::spawn(move || {
+        let file = app
+            .dialog()
+            .file()
+            .add_filter(
+                "Video",
+                &[
+                    "mp4", "mkv", "mov", "avi", "ts", "m4v", "webm", "mpeg", "mpg",
+                ],
+            )
+            .blocking_pick_file();
+        let path = file
+            .and_then(|f| f.into_path().ok())
+            .map(|p| p.to_string_lossy().to_string());
+        let _ = send.send(path);
+    });
     receive.await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 async fn pick_media_files(app: tauri::AppHandle) -> Result<Vec<String>, String> {
     let (send, receive) = tokio::sync::oneshot::channel();
-    app.dialog()
-        .file()
-        .add_filter(
-            "Video",
-            &[
-                "mp4", "mkv", "mov", "avi", "ts", "m4v", "webm", "mpeg", "mpg",
-            ],
-        )
-        .pick_files(move |files| {
-            let _ = send.send(
-                files
-                    .unwrap_or_default()
-                    .into_iter()
-                    .map(|f| f.to_string())
-                    .collect(),
-            );
-        });
+    std::thread::spawn(move || {
+        let files = app
+            .dialog()
+            .file()
+            .add_filter(
+                "Video",
+                &[
+                    "mp4", "mkv", "mov", "avi", "ts", "m4v", "webm", "mpeg", "mpg",
+                ],
+            )
+            .blocking_pick_files();
+        let paths: Vec<String> = files
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|f| f.into_path().ok())
+            .map(|p| p.to_string_lossy().to_string())
+            .collect();
+        let _ = send.send(paths);
+    });
     receive.await.map_err(|e| e.to_string())
 }
 

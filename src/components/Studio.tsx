@@ -1316,10 +1316,23 @@ function ImportForm({
   const [path, setPath] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [mode, setMode] = useState<"file" | "path">(webMode ? "file" : "path");
+  const [browsing, setBrowsing] = useState(false);
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (mode === "file" && file) await onUpload(file);
-    else if (mode === "path" && path.trim()) await onImport(path.trim());
+    if (mode === "file" && file) {
+      await onUpload(file);
+    } else if (mode === "path") {
+      let cleanPath = path.trim();
+      if (
+        (cleanPath.startsWith('"') && cleanPath.endsWith('"')) ||
+        (cleanPath.startsWith("'") && cleanPath.endsWith("'"))
+      ) {
+        cleanPath = cleanPath.slice(1, -1).trim();
+      }
+      if (cleanPath) {
+        await onImport(cleanPath);
+      }
+    }
   }
   return (
     <form onSubmit={(event) => void submit(event)} className="dialog-form">
@@ -1384,13 +1397,23 @@ function ImportForm({
               <Button
                 type="button"
                 variant="outline"
-                disabled={busy}
+                disabled={busy || browsing}
                 onClick={async () => {
-                  const selected = await onBrowse();
-                  if (selected) setPath(selected);
+                  setBrowsing(true);
+                  try {
+                    const selected = await onBrowse();
+                    if (selected) setPath(selected);
+                  } finally {
+                    setBrowsing(false);
+                  }
                 }}
               >
-                <FolderOpen size={16} /> Browse
+                {browsing ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <FolderOpen size={16} />
+                )}
+                Browse
               </Button>
             )}
           </div>

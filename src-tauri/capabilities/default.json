@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Local dashboard window",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "dialog:default"]
 }

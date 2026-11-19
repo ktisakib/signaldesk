@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { Loader2 } from "lucide-react";
 import { api, errorMessage, uploadMedia } from "@/lib/api";
 import { useStudio } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -11,41 +12,66 @@ export default function MediaDropZone() {
   );
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
+
   async function importFiles(files: (string | File)[]) {
     if (pending.current || !files.length) return;
     pending.current = true;
     setBusy(true);
     const failures: string[] = [];
     let count = 0;
-    for (const file of files) {
-      setMessage(
-        `Importing ${count + failures.length + 1} of ${files.length}…`,
-      );
+    try {
+      for (const file of files) {
+        setMessage(
+          `Importing ${count + failures.length + 1} of ${files.length}…`,
+        );
+        try {
+          if (typeof file === "string") {
+            await api("/api/library", "POST", { path: file });
+          } else {
+            const localPath = (file as unknown as { path?: unknown }).path;
+            if (typeof localPath === "string") {
+              await api("/api/library", "POST", { path: localPath });
+            } else if (isTauri()) {
+              throw new Error(
+                `Cannot resolve local file path for "${file.name}". Please click "Choose videos" to select files.`,
+              );
+            } else {
+              await uploadMedia(file);
+            }
+          }
+          count++;
+        } catch (error) {
+          const fileName = typeof file === "string" ? file : file.name;
+          failures.push(`${fileName}: ${errorMessage(error)}`);
+        }
+      }
       try {
-        if (typeof file === "string")
-          await api("/api/library", "POST", { path: file });
-        else await uploadMedia(file);
-        count++;
-      } catch (error) {
-        failures.push(
-          `${typeof file === "string" ? file : file.name}: ${errorMessage(error)}`,
+        await useStudio.getState().refresh();
+      } catch (refreshErr) {
+        console.error("Failed to refresh library after import:", refreshErr);
+      }
+      if (failures.length > 0 && count === 0) {
+        setMessage(`Import failed: ${failures.join(" · ")}`);
+      } else {
+        setMessage(
+          `Imported ${count} of ${files.length} videos.${failures.length ? " " + failures.join(" · ") : ""}`,
         );
       }
+    } finally {
+      pending.current = false;
+      setBusy(false);
     }
-    await useStudio.getState().refresh();
-    setMessage(
-      `Imported ${count} of ${files.length} videos.${failures.length ? " " + failures.join(" · ") : ""}`,
-    );
-    pending.current = false;
-    setBusy(false);
   }
+
   useEffect(() => {
     if (!isTauri()) return;
     let disposed = false;
     let unlisten: (() => void) | undefined;
     void getCurrentWindow()
       .onDragDropEvent(({ payload }) => {
-        if (payload.type === "drop") void importFiles(payload.paths);
+        if (payload.type === "drop" && payload.paths?.length) {
+          void importFiles(payload.paths);
+        }
       })
       .then((off) => {
         if (disposed) off();
@@ -56,13 +82,17 @@ export default function MediaDropZone() {
       unlisten?.();
     };
   }, []);
+
   return (
     <div
       className="media-drop-zone"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
-        if (!isTauri()) void importFiles(Array.from(e.dataTransfer.files));
+        const dropped = Array.from(e.dataTransfer.files);
+        if (dropped.length > 0) {
+          void importFiles(dropped);
+        }
       }}
     >
       <p role="status">{message}</p>
@@ -72,13 +102,23 @@ export default function MediaDropZone() {
           variant="outline"
           onClick={async () => {
             try {
-              await importFiles(await invoke<string[]>("pick_media_files"));
+              const selected = await invoke<string[]>("pick_media_files");
+              if (selected && selected.length > 0) {
+                await importFiles(selected);
+              }
             } catch (e) {
               setMessage(errorMessage(e));
             }
           }}
         >
-          Choose videos
+          {busy ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span>Importing…</span>
+            </>
+          ) : (
+            "Choose videos"
+          )}
         </Button>
       ) : (
         <label>

@@ -286,21 +286,75 @@ fn data_dir() -> PathBuf {
 
 fn tool_path(name: &str, home: &std::path::Path) -> PathBuf {
     let file = format!("{name}{}", std::env::consts::EXE_SUFFIX);
-    let bin_dir = std::env::var_os("BROADCAST_BIN_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| home.join("runtime/bin"));
-    let candidate = bin_dir.join(&file);
-    if candidate.is_file() {
-        candidate
-    } else {
-        // Installed Windows services carry verified media tools alongside the engine.
-        let bundled = std::env::current_exe()
-            .ok()
-            .and_then(|exe| exe.parent().map(|dir| dir.join("bin").join(&file)));
-        bundled
-            .filter(|path| path.is_file())
-            .unwrap_or_else(|| PathBuf::from(file))
+    if let Some(bin_dir) = std::env::var_os("BROADCAST_BIN_DIR") {
+        let candidate = PathBuf::from(bin_dir).join(&file);
+        if candidate.is_file() {
+            return candidate;
+        }
     }
+    let runtime_candidate = home.join("runtime/bin").join(&file);
+    if runtime_candidate.is_file() {
+        return runtime_candidate;
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            let bundled = dir.join("bin").join(&file);
+            if bundled.is_file() {
+                return bundled;
+            }
+            let adjacent = dir.join(&file);
+            if adjacent.is_file() {
+                return adjacent;
+            }
+        }
+    }
+    if let Some(paths) = std::env::var_os("PATH") {
+        for dir in std::env::split_paths(&paths) {
+            let candidate = dir.join(&file);
+            if candidate.is_file() {
+                return candidate;
+            }
+        }
+    }
+    #[cfg(target_os = "macos")]
+    {
+        for dir in [
+            "/opt/homebrew/bin",
+            "/opt/homebrew/sbin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+        ] {
+            let candidate = PathBuf::from(dir).join(&file);
+            if candidate.is_file() {
+                return candidate;
+            }
+        }
+    }
+    #[cfg(target_os = "linux")]
+    {
+        for dir in ["/usr/local/bin", "/usr/bin", "/bin"] {
+            let candidate = PathBuf::from(dir).join(&file);
+            if candidate.is_file() {
+                return candidate;
+            }
+        }
+    }
+    #[cfg(windows)]
+    {
+        for dir in [
+            r"C:\ProgramData\chocolatey\bin",
+            r"C:\ffmpeg\bin",
+            r"C:\Program Files\ffmpeg\bin",
+            r"C:\Program Files (x86)\ffmpeg\bin",
+        ] {
+            let candidate = PathBuf::from(dir).join(&file);
+            if candidate.is_file() {
+                return candidate;
+            }
+        }
+    }
+    PathBuf::from(file)
 }
 
 fn process(name: &str, home: &std::path::Path) -> Command {
@@ -385,16 +439,32 @@ async fn import_media(
     State(state): State<Arc<AppState>>,
     Json(body): Json<ImportMedia>,
 ) -> ApiResult<MediaItem> {
+    let mut raw_path = body.path.trim().to_string();
+    if raw_path.starts_with("file://") {
+        if let Ok(url) = url::Url::parse(&raw_path) {
+            if let Ok(path_buf) = url.to_file_path() {
+                raw_path = path_buf.to_string_lossy().to_string();
+            }
+        }
+    }
     Ok(Json(
-        register_media(&state, PathBuf::from(body.path), None).await?,
+        register_media(&state, PathBuf::from(raw_path), None).await?,
     ))
 }
 
 async fn register_media(
     state: &AppState,
-    path: PathBuf,
+    mut path: PathBuf,
     title: Option<String>,
 ) -> Result<MediaItem, ApiError> {
+    let path_str = path.to_string_lossy();
+    if path_str.starts_with("file://") {
+        if let Ok(url) = url::Url::parse(&path_str) {
+            if let Ok(p) = url.to_file_path() {
+                path = p;
+            }
+        }
+    }
     if !path.is_absolute() || !path.is_file() {
         return Err(invalid(
             "Choose an existing local video file using its absolute path",
