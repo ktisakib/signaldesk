@@ -84,24 +84,24 @@ type Page =
   | "graphics"
   | "settings";
 const pages = [
-  { id: "relay" as const, name: "LAN relay", icon: Radio },
   { id: "overview" as const, name: "Overview", icon: LayoutDashboard },
-  { id: "library" as const, name: "Media library", icon: Clapperboard },
   { id: "queue" as const, name: "Playout queue", icon: ListVideo },
-  { id: "schedule" as const, name: "Schedule", icon: Clock3 },
+  { id: "library" as const, name: "Media library", icon: Clapperboard },
+  { id: "relay" as const, name: "Broadcast & license", icon: Radio },
   { id: "live" as const, name: "Live production", icon: Camera },
   { id: "graphics" as const, name: "Broadcast graphics", icon: Layers },
-  { id: "output" as const, name: "Stream setup", icon: Radio },
+  { id: "schedule" as const, name: "Schedule", icon: Clock3 },
+  { id: "output" as const, name: "Local output", icon: Radio },
 ];
 const names: Record<Page, string> = {
-  relay: "LAN relay",
-  schedule: "Schedule",
-  graphics: "Broadcast graphics",
   overview: "Overview",
-  library: "Media library",
   queue: "Playout queue",
+  library: "Media library",
+  relay: "Broadcast & license",
   live: "Live production",
-  output: "Stream setup",
+  graphics: "Broadcast graphics",
+  schedule: "Schedule",
+  output: "Local output",
   settings: "Channel settings",
 };
 
@@ -335,7 +335,7 @@ export default function Studio() {
                           : page === "schedule"
                             ? "Plan the start. Adjust the time. Keep your lineup in order."
                             : page === "relay"
-                              ? "Connect this computer to your shared broadcasting server."
+                              ? "Activate your broadcaster license and connect this computer to your transmission server."
                               : page === "graphics"
                                 ? "Put your identity, headlines and announcements on air."
                                 : "Make this channel your own."}
