@@ -442,8 +442,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .route("/api/channels/{id}/rotate", post(rotate))
         .route("/api/channels/{id}/connection", get(connection))
         .fallback_service(
-            ServeDir::new(&root)
-                .not_found_service(ServeFile::new(format!("{root}/index.html"))),
+            ServeDir::new(&root).not_found_service(ServeFile::new(format!("{root}/index.html"))),
         )
         .layer(axum::extract::DefaultBodyLimit::max(4096))
         .with_state(Arc::clone(&app));
