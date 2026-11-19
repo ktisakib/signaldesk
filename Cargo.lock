@@ -233,7 +233,7 @@ dependencies = [
 
 [[package]]
 name = "broadcast-service"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "axum",
  "base64 0.22.1",
@@ -3786,7 +3786,7 @@ dependencies = [
 
 [[package]]
 name = "signaldesk"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "reqwest 0.12.28",
  "serde_json",
