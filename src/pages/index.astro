@@ -1,15 +1,19 @@
 ---
 import '../styles/global.css';
 import '../styles/studio.css';
-import Studio from '../components/Studio';
+import '../styles/admin.css';
+import HomeEntry from '../components/HomeEntry';
 ---
 <!doctype html>
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="description" content="SignalDesk — your channel, from your computer. Local broadcast control and internet playout." />
-    <title>SignalDesk · Broadcast studio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SignalDesk — Television broadcast operations, IPTV playout relay, and licensing administration." />
+    <title>SignalDesk · Operations & Administration</title>
   </head>
-  <body><Studio client:only="react" /><noscript>SignalDesk needs JavaScript to control your local broadcast engine.</noscript></body>
+  <body class="bg-[#0d1210] text-[#e8ede9] min-h-screen">
+    <HomeEntry client:only="react" />
+    <noscript>SignalDesk requires JavaScript to load the operations dashboard.</noscript>
+  </body>
 </html>

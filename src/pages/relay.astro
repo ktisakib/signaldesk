@@ -1,6 +1,19 @@
 ---
 import '../styles/global.css';
 import '../styles/studio.css';
-import RelayAdmin from '../components/RelayAdmin';
+import '../styles/admin.css';
 ---
-<!doctype html><html lang="en" class="dark"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width"/><title>SignalDesk · IPTV relay</title></head><body><RelayAdmin client:only="react"/><noscript>Enable JavaScript to manage or watch channels here. IPTV players can open the channel playback URL directly.</noscript></body></html>
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0;url=/" />
+    <title>SignalDesk · Redirecting to Home...</title>
+    <script>
+      window.location.replace('/');
+    </script>
+  </head>
+  <body class="bg-[#0d1210] text-[#e8ede9] min-h-screen flex items-center justify-center">
+    <p class="text-sm text-[#7e8f83]">Redirecting to <a href="/" class="text-[#b5edce] underline">home page (/)</a>...</p>
+  </body>
+</html>
