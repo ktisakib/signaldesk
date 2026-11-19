@@ -68,7 +68,11 @@ import { bytes, duration, viewerCapacity } from "@/lib/format";
 import { useStudio } from "@/lib/store";
 import LiveProduction from "@/components/LiveProduction";
 import RelayConnection from "@/components/RelayConnection";
-import AppUpdates from "@/components/AppUpdates";
+import AppUpdateBanner, {
+  TopbarUpdateAction,
+  SettingsUpdateCard,
+} from "@/components/AppUpdates";
+import { useUpdater } from "@/lib/updater";
 import MediaDropZone from "@/components/MediaDropZone";
 import Rundown from "@/components/Rundown";
 import SchedulePanel from "@/components/SchedulePanel";
@@ -313,6 +317,7 @@ export default function Studio() {
             <strong>{names[page]}</strong>
           </div>
           <div className="topbar-right">
+            <TopbarUpdateAction />
             <span className="local-tag">
               <MonitorPlay size={13} />
               {isTauri()
@@ -328,7 +333,7 @@ export default function Studio() {
           </div>
         </header>
         <main id="main-content" className="main-content">
-          <AppUpdates />
+          <AppUpdateBanner />
           <div className="page-heading">
             <div>
               <div className="eyebrow">YOUR BROADCAST, UNDER CONTROL</div>
@@ -843,16 +848,19 @@ export default function Studio() {
             <SchedulePanel onQueue={() => setPage("queue")} />
           )}
           {page === "settings" && (
-            <ChannelSettings
-              settings={settings}
-              disabled={!connected || busy || !!active}
-              onSave={(next) =>
-                void action(
-                  () => api("/api/settings", "PUT", next),
-                  "Channel settings saved",
-                )
-              }
-            />
+            <>
+              <ChannelSettings
+                settings={settings}
+                disabled={!connected || busy || !!active}
+                onSave={(next) =>
+                  void action(
+                    () => api("/api/settings", "PUT", next),
+                    "Channel settings saved",
+                  )
+                }
+              />
+              <SettingsUpdateCard />
+            </>
           )}
           <footer className="page-footer">
             <span>
@@ -865,6 +873,18 @@ export default function Studio() {
                 ? "All controls stay on this computer"
                 : "Waiting for local engine"}
               <span className="footer-separator">·</span>v{version}
+              {isTauri() && (
+                <>
+                  <span className="footer-separator">·</span>
+                  <button
+                    type="button"
+                    className="footer-update-link"
+                    onClick={() => void useUpdater.getState().check(true)}
+                  >
+                    Check for updates
+                  </button>
+                </>
+              )}
             </span>
           </footer>
         </main>
