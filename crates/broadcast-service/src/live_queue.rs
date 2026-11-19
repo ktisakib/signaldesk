@@ -67,7 +67,7 @@ pub(crate) async fn run(
         .map_err(|e| e.to_string())?;
     let mut pipe = child.stdin.take().ok_or("Missing queue input")?;
     let feeder_state = Arc::clone(state);
-    let looping = config.loop_queue;
+    let default_looping = config.loop_queue;
     let mut feeder_stop = stop.clone();
     let feeder = tokio::spawn(async move {
         let mut current = None;
@@ -81,6 +81,10 @@ pub(crate) async fn run(
                     _ = feeder_stop.changed() => return Ok::<(), String>(()),
                 }
             }
+            let looping = match settings(&feeder_state).await {
+                Ok(s) => s.loop_queue,
+                Err(_) => default_looping,
+            };
             let items = receiver.borrow().clone();
             let index = match current {
                 Some(current) => match next_index(&items, &current, looping) {

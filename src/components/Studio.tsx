@@ -35,6 +35,7 @@ import {
   Plus,
   Radio,
   RefreshCw,
+  Repeat,
   Search,
   Settings2,
   Signal,
@@ -186,6 +187,21 @@ export default function Studio() {
         true,
       );
     }
+  }
+  async function toggleRepeat() {
+    if (!settings || busy) return;
+    const next = !settings.loopQueue;
+    await action(
+      async () => {
+        await api("/api/settings", "PUT", {
+          ...settings,
+          loopQueue: next,
+        });
+      },
+      next
+        ? "Playlist repeat enabled: shows will loop continuously."
+        : "Playlist repeat disabled: lineup will stop after the last show.",
+    );
   }
   const addToQueue = (item: MediaItem) =>
     action(
@@ -612,15 +628,37 @@ export default function Studio() {
                       </Button>
                     </div>
                   )}
-                  <div className="queue-note">
-                    <span className="loop-icon">↻</span>
-                    {settings?.loopQueue
-                      ? "Continuous playout"
-                      : "Sequential playout"}
-                    <span>·</span>
-                    {settings?.loopQueue
-                      ? "Your lineup repeats until you stop it."
-                      : "Your broadcast stops after the last program."}
+                  <div className="queue-note queue-repeat-bar">
+                    <div className="queue-repeat-info">
+                      <Repeat
+                        size={14}
+                        className={
+                          settings?.loopQueue
+                            ? "text-emerald-400"
+                            : "muted"
+                        }
+                      />
+                      <span>
+                        <strong>
+                          {settings?.loopQueue
+                            ? "Repeat enabled"
+                            : "Repeat disabled"}
+                          :
+                        </strong>{" "}
+                        {settings?.loopQueue
+                          ? "Your lineup repeats until you stop it."
+                          : "Your broadcast stops after the last program."}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!connected || busy}
+                      onClick={toggleRepeat}
+                      className="queue-repeat-toggle-btn"
+                    >
+                      Turn {settings?.loopQueue ? "Off" : "On"}
+                    </Button>
                   </div>
                 </section>
                 <section className="output-card">
@@ -696,16 +734,42 @@ export default function Studio() {
                         0,
                       ),
                     )}{" "}
-                    per run
+                    per run ·{" "}
+                    <span className={settings?.loopQueue ? "text-emerald-400 font-medium" : ""}>
+                      {settings?.loopQueue
+                        ? "Repeat continuous"
+                        : "Play once"}
+                    </span>
                   </span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage("library")}
-                >
-                  <Plus size={14} /> Add programs
-                </Button>
+                <div className="panel-heading-actions">
+                  <Button
+                    variant={settings?.loopQueue ? "secondary" : "outline"}
+                    size="sm"
+                    disabled={!connected || busy}
+                    onClick={toggleRepeat}
+                    title={
+                      settings?.loopQueue
+                        ? "Repeat playlist is ON: shows loop continuously. Click to play once."
+                        : "Repeat playlist is OFF: play once. Click to repeat shows continuously."
+                    }
+                    className={
+                      settings?.loopQueue
+                        ? "repeat-header-btn active"
+                        : "repeat-header-btn"
+                    }
+                  >
+                    <Repeat size={14} className={busy ? "animate-spin" : ""} />
+                    Repeat: {settings?.loopQueue ? "On" : "Off"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage("library")}
+                  >
+                    <Plus size={14} /> Add programs
+                  </Button>
+                </div>
               </div>
               {queue.length ? (
                 <>
@@ -728,6 +792,8 @@ export default function Studio() {
                   <Rundown
                     items={queue}
                     disabled={!connected || busy}
+                    loopQueue={settings?.loopQueue}
+                    onToggleRepeat={toggleRepeat}
                   />
                 </>
               ) : (
@@ -743,7 +809,7 @@ export default function Studio() {
                 />
               )}
               <div className="queue-note">
-                <Clock3 size={14} />
+                <Repeat size={14} />
                 <Button
                   variant="outline"
                   size="sm"
@@ -751,7 +817,12 @@ export default function Studio() {
                 >
                   Schedule this lineup
                 </Button>
-                Local clock times are estimates. Live edits apply after media preparation at the next available program boundary.
+                <span>
+                  {settings?.loopQueue
+                    ? "Repeat is ON: shows will replay again and again in a continuous loop."
+                    : "Repeat is OFF: lineup will stop after the final show."}{" "}
+                  Local clock times are estimates. Live edits apply after media preparation at the next available program boundary.
+                </span>
               </div>
             </section>
           )}

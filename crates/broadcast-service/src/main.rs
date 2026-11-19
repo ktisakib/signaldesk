@@ -691,15 +691,26 @@ async fn put_settings(
 ) -> ApiResult<Settings> {
     config.validate()?;
     let _action = state.actions.lock().await;
-    if state.runtime.lock().await.stop.is_some() {
-        return Err(invalid("Stop the broadcast before changing settings"));
+    let is_live = state.runtime.lock().await.stop.is_some();
+    if is_live {
+        let current = settings(&state).await?;
+        if current.bitrate_kbps != config.bitrate_kbps
+            || current.hls_port != config.hls_port
+            || current.rtsp_port != config.rtsp_port
+        {
+            return Err(invalid(
+                "Stop the broadcast before changing bitrate or ports",
+            ));
+        }
     }
     sqlx::query("UPDATE settings SET value=? WHERE id=1")
         .bind(serde_json::to_string(&config).map_err(|e| invalid(e.to_string()))?)
         .execute(&state.db)
         .await?;
-    if let Some(mut server) = state.media_server.lock().await.take() {
-        let _ = server.kill().await;
+    if !is_live {
+        if let Some(mut server) = state.media_server.lock().await.take() {
+            let _ = server.kill().await;
+        }
     }
     Ok(Json(config))
 }

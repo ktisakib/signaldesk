@@ -30,3 +30,9 @@ export function scheduledInstant(value: string, now = Date.now()): string {
     throw new Error("That local time does not exist. Choose another time.");
   return date.toISOString();
 }
+
+export function repeatDescription(loopQueue: boolean): string {
+  return loopQueue
+    ? "Repeat enabled: shows will loop continuously."
+    : "Repeat disabled: playout will stop after the last show.";
+}

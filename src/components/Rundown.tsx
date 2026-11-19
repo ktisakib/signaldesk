@@ -23,11 +23,12 @@ import {
   X,
   Film,
   Loader2,
+  Repeat,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api, errorMessage, type MediaItem } from "@/lib/api";
 import { duration, queueOffsets } from "@/lib/format";
-import { moveEntry } from "@/lib/rundown";
+import { moveEntry, repeatDescription } from "@/lib/rundown";
 import { useStudio } from "@/lib/store";
 type Entry = { uid: string; item: MediaItem };
 function entries(items: MediaItem[]): Entry[] {
@@ -41,23 +42,62 @@ function entries(items: MediaItem[]): Entry[] {
 export default function Rundown({
   items,
   disabled,
+  loopQueue,
+  onToggleRepeat,
 }: {
   items: MediaItem[];
   disabled: boolean;
+  loopQueue?: boolean;
+  onToggleRepeat?: () => Promise<void> | void;
 }) {
   const [order, setOrder] = useState(() => entries(items));
   const [dragged, setDragged] = useState<string | null>(null);
   const [saving, setSaving] = useState(false),
+    [togglingRepeat, setTogglingRepeat] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
   const pending = useRef(false);
   const refresh = useStudio((s) => s.refresh);
   const status = useStudio((s) => s.status);
+  const storeSettings = useStudio((s) => s.settings);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+  const isRepeating = loopQueue ?? storeSettings?.loopQueue ?? true;
+
+  async function handleToggleRepeat() {
+    if (disabled || togglingRepeat) return;
+    setError("");
+    setMessage("");
+    if (onToggleRepeat) {
+      setTogglingRepeat(true);
+      try {
+        await onToggleRepeat();
+      } catch (e) {
+        setError(errorMessage(e));
+      } finally {
+        setTogglingRepeat(false);
+      }
+      return;
+    }
+    if (!storeSettings) return;
+    setTogglingRepeat(true);
+    try {
+      const next = !isRepeating;
+      await api("/api/settings", "PUT", {
+        ...storeSettings,
+        loopQueue: next,
+      });
+      await refresh();
+      setMessage(repeatDescription(next));
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setTogglingRepeat(false);
+    }
+  }
   const currentUid =
     status?.currentMediaId == null
       ? null
@@ -122,7 +162,7 @@ export default function Rundown({
     <>
       {active && currentIndex < 0 && <p role="status" className="program-playing">On air · {status.currentTitle} · {duration(status.currentElapsedSeconds ?? 0)} elapsed</p>}
       <div className="rundown-tools">
-        <span>
+        <span className="rundown-tools-hint">
           {saving ? (
             <>
               <Loader2 size={14} className="animate-spin" /> Saving order…
@@ -131,6 +171,28 @@ export default function Rundown({
             "Drag a handle to reorder. Keyboard: Space, arrow keys, then Space. Escape cancels."
           )}
         </span>
+        <button
+          type="button"
+          className={`repeat-toggle-btn ${isRepeating ? "active" : ""}`}
+          onClick={handleToggleRepeat}
+          disabled={disabled || togglingRepeat}
+          title={
+            isRepeating
+              ? "Repeat playlist: ON (Continuous loop). Click to play once and stop after last show."
+              : "Repeat playlist: OFF (Play once). Click to repeat shows continuously."
+          }
+          aria-pressed={isRepeating}
+        >
+          {togglingRepeat ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <Repeat size={13} />
+          )}
+          <span>
+            Repeat playlist: <strong>{isRepeating ? "On" : "Off"}</strong>
+          </span>
+          <span className="repeat-indicator-dot" aria-hidden="true" />
+        </button>
       </div>
       <DndContext
         sensors={sensors}

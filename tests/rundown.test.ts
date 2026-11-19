@@ -4,6 +4,7 @@ import {
   moveEntry,
   localDateTime,
   scheduledInstant,
+  repeatDescription,
 } from "../src/lib/rundown.ts";
 test("reorder moves an occurrence without dropping duplicate programs or mutating the queue", () => {
   const queue = [7, 2, 7, 4];
@@ -22,4 +23,14 @@ test("scheduled time round trips local time and rejects invalid or past dates", 
   assert.throws(() => scheduledInstant("2020-01-01T00:00"));
   assert.throws(() => scheduledInstant("garbage"));
   assert.equal(localDateTime("garbage"), "");
+});
+test("repeat playlist description provides clear guidance for continuous loop vs single play", () => {
+  assert.equal(
+    repeatDescription(true),
+    "Repeat enabled: shows will loop continuously.",
+  );
+  assert.equal(
+    repeatDescription(false),
+    "Repeat disabled: playout will stop after the last show.",
+  );
 });
