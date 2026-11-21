@@ -7,8 +7,15 @@ Push-Location $project
 $configPath = Join-Path ([IO.Path]::GetTempPath()) ('signaldesk-bundle-' + [guid]::NewGuid() + '.json')
 try {
     $runtime = Join-Path $project 'src-tauri\runtime'
-    & python (Join-Path $PSScriptRoot 'bundle-windows-media.py') $MsysRoot $runtime
-    if ($LASTEXITCODE -ne 0) { throw 'Failed to stage the Windows media runtime.' }
+    if (Test-Path $MsysRoot) {
+        & python (Join-Path $PSScriptRoot 'bundle-windows-media.py') $MsysRoot $runtime
+        if ($LASTEXITCODE -ne 0) { throw 'Failed to stage the Windows media runtime.' }
+    } else {
+        Write-Host "Staging Windows media runtime using verified releases via setup-windows.ps1..."
+        $archiveCache = Join-Path $project '.downloads'
+        & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'setup-windows.ps1') -RuntimeDirectory $runtime -ArchiveDirectory $archiveCache
+        if ($LASTEXITCODE -ne 0) { throw 'Failed to setup media runtime.' }
+    }
     & npm.cmd run check
     if ($LASTEXITCODE -ne 0) { throw 'Frontend type checks failed.' }
     & npm.cmd run lint
@@ -30,12 +37,19 @@ try {
         Copy-Item (Join-Path $project ('docs\' + $file)) (Join-Path $runtimeDocs $file) -Force
     }
     Copy-Item (Join-Path $project 'README.md') (Join-Path $runtime 'README.md') -Force
-    $config = @{ bundle = @{ windows = @{ webviewInstallMode = @{ type = 'offlineInstaller' } } } } | ConvertTo-Json -Depth 6
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'setup-nsis.ps1')
+    $bundleConfig = @{
+        windows = @{ webviewInstallMode = @{ type = 'downloadBootstrapper' } }
+    }
+    if (!$env:TAURI_SIGNING_PRIVATE_KEY) {
+        $bundleConfig['createUpdaterArtifacts'] = $false
+    }
+    $config = @{ bundle = $bundleConfig } | ConvertTo-Json -Depth 6
     [IO.File]::WriteAllText($configPath, $config, [Text.UTF8Encoding]::new($false))
     & npm.cmd run tauri -- build --bundles nsis --config $configPath
     if ($LASTEXITCODE -ne 0) { throw 'Desktop installer build failed.' }
     Write-Host 'Installer: target\release\bundle\nsis\'
-    Write-Host 'The installer includes the Windows media tools and WebView2.'
+    Write-Host 'The installer includes the Windows media tools without bundling the offline WebView2 installer.'
 } finally {
     Remove-Item $configPath -Force -ErrorAction SilentlyContinue
     Pop-Location

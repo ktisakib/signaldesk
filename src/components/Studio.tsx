@@ -6,7 +6,7 @@ import {
   type SubmitEvent,
   type ReactNode,
 } from "react";
-import { isTauri } from "@tauri-apps/api/core";
+import { isTauri } from "@/lib/api";
 import type HlsPlayer from "hls.js";
 import {
   Activity,
@@ -473,6 +473,8 @@ export default function Studio() {
                   </div>
                   <ProgramMonitor
                     live={live}
+                    starting={status?.state === "starting"}
+                    preparingTitle={status?.currentTitle || undefined}
                     url={status?.hlsUrl}
                     title={settings?.channelName || "MY CHANNEL"}
                   />
@@ -995,10 +997,14 @@ export default function Studio() {
 
 function ProgramMonitor({
   live,
+  starting,
+  preparingTitle,
   url,
   title,
 }: {
   live: boolean;
+  starting?: boolean;
+  preparingTitle?: string;
   url?: string;
   title: string;
 }) {
@@ -1009,35 +1015,54 @@ function ProgramMonitor({
     setPlaybackError(false);
     if (!live || !url || !video.current) return;
     const element = video.current;
-    if (element.canPlayType("application/vnd.apple.mpegurl")) {
-      element.src = url;
-      return () => {
-        element.removeAttribute("src");
-        element.load();
-      };
-    }
     let cancelled = false;
     let player: HlsPlayer | undefined;
+
     async function connect() {
-      const { default: Hls } = await import("hls.js/light");
+      const { default: Hls } = await import("hls.js");
       if (cancelled) return;
-      if (!Hls.isSupported()) {
+      if (Hls.isSupported()) {
+        player = new Hls({
+          lowLatencyMode: true,
+          enableWorker: false,
+          backBufferLength: 30,
+        });
+        player.loadSource(url!);
+        player.attachMedia(element);
+        player.on(Hls.Events.MANIFEST_PARSED, () => {
+          element.play().catch(() => {});
+        });
+        player.on(Hls.Events.ERROR, (_, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                player?.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                player?.recoverMediaError();
+                break;
+              default:
+                setPlaybackError(true);
+                break;
+            }
+          }
+        });
+      } else if (element.canPlayType("application/vnd.apple.mpegurl")) {
+        element.src = url!;
+        element.play().catch(() => {});
+      } else {
         setPlaybackError(true);
-        return;
       }
-      player = new Hls({ lowLatencyMode: true });
-      player.loadSource(url!);
-      player.attachMedia(element);
-      player.on(Hls.Events.ERROR, (_, data) => {
-        if (data.fatal) setPlaybackError(true);
-      });
     }
+
     void connect().catch(() => {
       if (!cancelled) setPlaybackError(true);
     });
     return () => {
       cancelled = true;
       player?.destroy();
+      element.removeAttribute("src");
+      element.load();
     };
   }, [live, url, retry]);
   return (
@@ -1068,6 +1093,32 @@ function ProgramMonitor({
               </Button>
             </div>
           )}
+        </>
+      ) : starting ? (
+        <>
+          <div className="monitor-grid" />
+          <div className="monitor-corner top-left" />
+          <div className="monitor-corner top-right" />
+          <div className="monitor-corner bottom-left" />
+          <div className="monitor-corner bottom-right" />
+          <div className="monitor-slate">
+            <div className="slate-logo">
+              <RefreshCw className="animate-spin text-[#61cf8e]" size={34} />
+            </div>
+            <span className="slate-channel">{title}</span>
+            <h3>Preparing your signal…</h3>
+            <p>
+              {preparingTitle ||
+                "Transcoding clip to broadcast format. Once cached, playback is immediate."}
+            </p>
+            <div className="slate-status">
+              <span className="status-dot green" /> ENCODING TO CACHE
+            </div>
+          </div>
+          <div className="monitor-caption">
+            <span>PROGRAM / 01</span>
+            <span>OPTIMIZING MEDIA</span>
+          </div>
         </>
       ) : (
         <>

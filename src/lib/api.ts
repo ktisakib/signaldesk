@@ -1,4 +1,14 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke, isTauri as coreIsTauri } from "@tauri-apps/api/core";
+
+export function isTauri(): boolean {
+  if (typeof window === "undefined") return false;
+  return !!(
+    coreIsTauri() ||
+    (window as any).isTauri ||
+    "__TAURI_INTERNALS__" in window ||
+    "__TAURI__" in window
+  );
+}
 
 export interface MediaItem {
   id: number;

@@ -1127,6 +1127,18 @@ async fn read_progress(
     while let Ok(Some(line)) = lines.next_line().await {
         if let Some((key, value)) = line.split_once('=') {
             if !publish {
+                if key == "out_time_us" && duration > 0. {
+                    if let Some(item) = timeline.first() {
+                        let clock =
+                            (value.trim().parse::<f64>().unwrap_or(0.) / 1_000_000.).max(0.);
+                        let pct = ((clock / duration) * 100.0).clamp(0.0, 99.0) as u32;
+                        let mut runtime = state.runtime.lock().await;
+                        if runtime.status.state == "starting" {
+                            runtime.status.current_title =
+                                Some(format!("Preparing: {} ({}%)", item.title, pct));
+                        }
+                    }
+                }
                 continue;
             }
             let mut runtime = state.runtime.lock().await;
@@ -1287,7 +1299,13 @@ async fn prepare_queue(
                 stop,
                 false,
                 config.bitrate_kbps,
-                Vec::new(),
+                vec![PreparedItem {
+                    id: item.id,
+                    occurrence: 0,
+                    title: item.title.clone(),
+                    path: partial.clone(),
+                    duration: item.duration_seconds,
+                }],
             )
             .await;
             if !matches!(result, Ok(true)) {

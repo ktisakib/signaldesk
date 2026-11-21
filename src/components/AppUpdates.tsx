@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { isTauri } from "@tauri-apps/api/core";
+import { isTauri } from "@/lib/api";
 import {
   Download,
   Loader2,
@@ -142,7 +142,7 @@ export function SettingsUpdateCard() {
         <div className="update-card-status">
           <div className="update-status-row">
             <span className="update-label">Current Version</span>
-            <span className="update-value font-mono">v0.1.9</span>
+            <span className="update-value font-mono">v0.1.10</span>
           </div>
           <div className="update-status-row">
             <span className="update-label">Update Status</span>

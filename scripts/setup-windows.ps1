@@ -20,26 +20,53 @@ function Get-PublishedSha256([string]$Content, [string]$FileName) {
 }
 
 function Get-SetupFile([string]$Url, [string]$Name) {
-    if ($ArchiveDirectory) {
-        $cached = Join-Path $ArchiveDirectory $Name
-        if (!(Test-Path -LiteralPath $cached -PathType Leaf)) { throw "Missing offline setup file: $cached" }
-        return $cached
-    }
-    $destination = Join-Path $temporary $Name
+    $cacheDir = if ($ArchiveDirectory) { $ArchiveDirectory } else { Join-Path ([IO.Path]::GetTempPath()) 'signaldesk-downloads' }
+    if (!(Test-Path $cacheDir)) { New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null }
+    $destination = Join-Path $cacheDir $Name
     $curlDirectory = if ([Environment]::Is64BitProcess) { 'System32' } else { 'Sysnative' }
     $curl = Join-Path $env:SystemRoot "$curlDirectory\curl.exe"
-    # curl bounds both a stalled transfer and total time. Keep NSIS informed while it runs.
+
+    if (Test-Path -LiteralPath $destination -PathType Leaf) {
+        $existing = Get-Item -LiteralPath $destination
+        if ($existing.Length -gt 0) {
+            $match = $manifest | Where-Object { $_.fileName -eq $Name }
+            if ($match -and $match.sha256) {
+                if ((Get-FileHash $destination -Algorithm SHA256).Hash -eq $match.sha256) {
+                    Write-Host ("Using cached verified archive: {0}" -f $Name)
+                    return $destination
+                }
+            }
+        }
+    }
+
     $arguments = @('--fail', '--silent', '--show-error', '--location', '--proto', '=https',
-        '--proto-redir', '=https', '--connect-timeout', '20', '--speed-limit', '1024',
-        '--speed-time', '45', '--max-time', '900', '--output', ('"' + $destination + '"'), $Url)
-    $process = Start-Process -FilePath $curl -ArgumentList $arguments -PassThru -NoNewWindow
+        '--proto-redir', '=https', '--connect-timeout', '30', '--speed-limit', '1024',
+        '--speed-time', '45', '--max-time', '900', '--retry', '10', '--retry-delay', '2',
+        '-C', '-', '--output', ('"{0}"' -f $destination), ('"{0}"' -f $Url))
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $curl
+    $psi.Arguments = $arguments -join ' '
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $psi.RedirectStandardError = $true
+
+    $process = [System.Diagnostics.Process]::Start($psi)
     try {
         while (!$process.WaitForExit(3000)) {
             $received = Get-Item -LiteralPath $destination -ErrorAction SilentlyContinue
-            Write-Host ("Receiving {0} - {1:N1} MiB" -f $Name, ($received.Length / 1MB))
+            if ($received) {
+                Write-Host ("Receiving {0} - {1:N1} MiB" -f $Name, ($received.Length / 1MB))
+            }
         }
-        if ($process.ExitCode -ne 0) { throw "Download failed for $Name (curl exit $($process.ExitCode)). Check the connection to $(([uri]$Url).Host) or use the offline recovery procedure." }
-    } finally { $process.Dispose() }
+        $errText = $process.StandardError.ReadToEnd().Trim()
+        $exitCode = $process.ExitCode
+        if ($exitCode -ne 0) {
+            throw "Download failed for $Name (curl exit ${exitCode}: $errText). Check the connection to $(([uri]$Url).Host) or use the offline recovery procedure."
+        }
+    } finally {
+        $process.Dispose()
+    }
     return $destination
 }
 

@@ -10,6 +10,11 @@ import Studio from '../components/Studio';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="SignalDesk — your channel, from your computer. Local broadcast control and internet playout." />
     <title>SignalDesk · Broadcast Studio</title>
+    <script is:inline>
+      if (typeof window !== "undefined" && ("__TAURI_INTERNALS__" in window || "__TAURI__" in window || window.origin?.includes("tauri"))) {
+        window.isTauri = true;
+      }
+    </script>
   </head>
   <body class="bg-[#121615] text-[#e8ede9] min-h-screen">
     <Studio client:only="react" />

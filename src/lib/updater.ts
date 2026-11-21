@@ -1,6 +1,6 @@
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { create } from "zustand";
-import { errorMessage } from "./api";
+import { isTauri, errorMessage } from "./api";
 
 export interface UpdateInfo {
   version: string;

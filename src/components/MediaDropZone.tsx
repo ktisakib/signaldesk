@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { invoke, isTauri } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Loader2 } from "lucide-react";
-import { api, errorMessage, uploadMedia } from "@/lib/api";
+import { api, errorMessage, uploadMedia, isTauri } from "@/lib/api";
 import { useStudio } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 

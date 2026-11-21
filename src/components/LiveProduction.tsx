@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
-import { isTauri } from "@tauri-apps/api/core";
+import { isTauri } from "@/lib/api";
 import {
   Camera,
   CameraOff,

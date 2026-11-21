@@ -1,7 +1,10 @@
-SignalDesk 0.1.7 adds account license keys with expiry, broadcaster installation limits and multiple channel ownership per client account.
+SignalDesk 0.1.10 improves desktop live monitoring, media preparation visibility, and Windows installer efficiency.
 
-Administrators can issue, renew, revoke and rotate licenses, release device slots, and manage named TV channels. Broadcasters activate their desktop installation in the client portal and import its private profile. Multiple channels on one installation share a device slot. The relay rejects missing/expired/revoked activations and disconnects unauthorized running licensed publishers.
+Key updates in this release:
+- **Program Monitor & HLS Playback**: Resolved preview playback in Windows WebView2 using resilient inline HLS transmuxing and autoplay error recovery.
+- **Media Preparation Progress**: Live transcoding progress is now parsed and reported in real-time (`Preparing: <title> (<percentage>%)`) when caching media items.
+- **Active Preparation State**: The Program Monitor displays an active optimizing slate with live completion status during clip preparation instead of remaining on standby.
+- **Lean Windows Installer**: Switched WebView2 packaging to bootstrapper download mode and cleared archive staging, reducing the Windows setup package size from ~350MB+ down to ~85MB.
+- **Windows Setup Robustness**: Hardened PowerShell setup scripts and process execution pipelines for reliable native service startup.
 
-Existing unlicensed channels retain their current profiles. Upgrade to this release before enabling a license on an account. Stop broadcasting before installing an update. Signed updates are offered in the desktop application; the single Windows installer includes the offline media runtime and WebView2.
-
-Installation identity is a software credential, not hardware attestation. Keep private profiles and the installation data directory private. The Windows executable is unsigned by Authenticode.
+Stop broadcasting before installing an update. The single Windows installer includes the desktop application and verified offline media runtime tools (FFmpeg, FFprobe, MediaMTX).

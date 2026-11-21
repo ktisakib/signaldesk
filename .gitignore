@@ -21,3 +21,4 @@ releases/
 *.connection.json
 
 .env.relay
+.downloads/

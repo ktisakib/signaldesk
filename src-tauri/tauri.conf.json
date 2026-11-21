@@ -1,15 +1,16 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SignalDesk",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "identifier": "com.signaldesk.studio",
   "build": {
     "beforeDevCommand": "npm run dev -- --host 127.0.0.1",
-    "devUrl": "http://127.0.0.1:4321",
+    "devUrl": "http://127.0.0.1:4321/studio",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "SignalDesk \u2014 Broadcast Studio",
@@ -38,6 +39,9 @@
     "shortDescription": "Broadcast a local television channel from one computer",
     "category": "Video",
     "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
       "nsis": {
         "installMode": "currentUser"
       }
