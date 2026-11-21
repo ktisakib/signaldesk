@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readRelayProfile } from "../src/lib/relay.ts";
+import { readRelayProfile, relayStatusLabel } from "../src/lib/relay.ts";
+
+test("relay status distinguishes publishing from connecting and retrying", () => {
+  assert.equal(relayStatusLabel("idle"), "STANDBY (READY)");
+  assert.equal(relayStatusLabel("connecting"), "CONNECTING TO RELAY");
+  assert.equal(relayStatusLabel("reconnecting"), "RECONNECTING TO RELAY");
+  assert.equal(relayStatusLabel("live"), "● SENDING TO RELAY");
+});
 
 test("connection profiles retain only known fields and require a version and port", () => {
   const fields = {

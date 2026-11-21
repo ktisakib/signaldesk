@@ -76,6 +76,8 @@ For an outside-LAN playback check, run the **Verify public HLS playback** GitHub
 
 If publishing fails, check UDP forwarding, enabled state, credentials and publisher bitrate. If HTTPS fails, check DNS A/AAAA, TCP forwarding and gateway logs. A saved domain remains pending until DNS and routing permit certificate issuance.
 
+If a LAN playlist plays but the public playlist returns `no stream is available`, compare `/api/channels` on both addresses. Different channel lists mean they are separate relay deployments. A channel ID does not share its stream or publishing key between servers. Import the connection profile from the public relay into the broadcaster and restart relay output; changing only the viewer URL or deploying the website does not send the stream to that relay. On the same LAN, use the public relay's LAN publishing address if the router cannot loop back public UDP traffic, while keeping the public relay's publishing key and HTTPS viewer URL.
+
 If the public address shows your router login or a certificate for `tplinkwifi.net`, move or disable WAN remote administration on TCP 80/443 and correct the forwarding rules above. Never enter the relay administrator token into that router page. Let's Encrypt must reach Caddy on the relay, rather than the router's web interface.
 
 If Docker reports `Unable to enable DNAT rule` with a missing `DOCKER` chain, its firewall rules may have been cleared after Docker started. During a maintenance window, restart Docker, then recreate the gateway. This briefly interrupts all containers on that host; it preserves named volumes and channel credentials.

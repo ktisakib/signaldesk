@@ -1,3 +1,12 @@
+export function relayStatusLabel(state: string): string {
+  switch (state) {
+    case "live": return "● SENDING TO RELAY";
+    case "connecting": return "CONNECTING TO RELAY";
+    case "reconnecting": return "RECONNECTING TO RELAY";
+    default: return "STANDBY (READY)";
+  }
+}
+
 export interface RelayProfile {
   format: "signaldesk-connection-v1";
   channelName: string;

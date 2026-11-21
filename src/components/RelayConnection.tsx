@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api, errorMessage } from "@/lib/api";
 import { useStudio } from "@/lib/store";
-import { readRelayProfile } from "@/lib/relay";
+import { readRelayProfile, relayStatusLabel } from "@/lib/relay";
 
 // Built-in relay defaults: IP, ports, and credentials are set internally
 const DEFAULT_RELAY_SERVER = "https://tv.pressmos.com";
@@ -128,6 +128,7 @@ export default function RelayConnection() {
   }, [connected]);
 
   const active = status.state !== "idle";
+  const live = status.state === "live";
 
   async function action(work: () => Promise<unknown>, message: string) {
     setBusy(true);
@@ -325,11 +326,11 @@ export default function RelayConnection() {
                   width: "36px",
                   height: "36px",
                   borderRadius: "8px",
-                  background: active ? "#163321" : "#1c2520",
-                  border: `1px solid ${active ? "#2f5c3d" : "#2d3b31"}`,
+                  background: live ? "#163321" : "#1c2520",
+                  border: `1px solid ${live ? "#2f5c3d" : "#2d3b31"}`,
                   display: "grid",
                   placeItems: "center",
-                  color: active ? "#4ade80" : "#b5edce",
+                  color: live ? "#4ade80" : "#b5edce",
                 }}
               >
                 <Radio size={20} />
@@ -352,25 +353,27 @@ export default function RelayConnection() {
             </div>
 
             <span
-              className={`pill ${active ? "live" : ""}`}
+              className={`pill ${live ? "live" : ""}`}
               style={{
                 padding: "4px 12px",
                 borderRadius: "20px",
                 fontSize: "11px",
                 fontWeight: "600",
                 letterSpacing: "0.04em",
-                background: active
+                background: live
                   ? "rgba(34, 197, 94, 0.15)"
                   : "rgba(148, 163, 184, 0.1)",
-                color: active ? "#4ade80" : "#94a3b8",
+                color: live ? "#4ade80" : "#94a3b8",
                 border: `1px solid ${
-                  active ? "rgba(34, 197, 94, 0.3)" : "rgba(148, 163, 184, 0.2)"
+                  live ? "rgba(34, 197, 94, 0.3)" : "rgba(148, 163, 184, 0.2)"
                 }`,
               }}
             >
-              {active ? "● ON AIR (RELAY ACTIVE)" : "STANDBY (READY)"}
+              {relayStatusLabel(status.state)}
             </span>
           </div>
+
+          {status.error && <p role="alert">{status.error}</p>}
 
           <div
             style={{
@@ -454,7 +457,7 @@ export default function RelayConnection() {
                   () => api(`/api/relay/${active ? "stop" : "start"}`, "POST", {}),
                   active
                     ? "Relay broadcast stopped."
-                    : "Broadcasting live to the relay server! Your signal is on air.",
+                    : "Relay output enabled. Waiting for the publishing connection.",
                 )
               }
               style={{
@@ -482,7 +485,7 @@ export default function RelayConnection() {
               onClick={() =>
                 void action(
                   () => api("/api/relay/test", "POST", {}),
-                  "Relay server reachable and channel verified.",
+                  "Relay web address reachable and channel registered. This does not verify the publishing key or live playback.",
                 )
               }
               style={{ minHeight: "40px", borderColor: "#2b3930", color: "#cad8ce" }}
